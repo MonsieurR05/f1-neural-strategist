@@ -154,6 +154,7 @@ def build_race(race_path: Path, cfg: dict) -> tuple[pd.DataFrame, dict]:
         "event_name": meta["event_name"],
         "location": meta["location"],
         "circuit": circuit,
+        "source": meta.get("source", "fastf1"),
         "event_date": meta["event_date"],
         "total_laps": total_laps,
         "laps_completed": meta["laps_completed"],

@@ -73,7 +73,7 @@ conditions) and the simulator composes them into counterfactuals.
 - **Metrics:** MAE, RMSE, NLL, calibration (PIT histogram / interval coverage),
   stint degradation-slope error, error on long-stint extrapolation slices.
 
-- **Split:** by season, never random laps. Train 2019–2023 · validate 2024 ·
+- **Split:** by season, never random laps. Train 2021–2023 · validate 2024 ·
   test 2025.
 
 - **v2 — GRU in-race adaptation:** condition on the laps already run in the current
@@ -102,7 +102,7 @@ Carlo: Spearman ρ, top-1 agreement, latency speed-up.
 | **FastF1** (primary) | laps, sectors, compound, tyre life, stints, pit in/out, positions, track status, weather, car X/Y | timing data from 2018; results via Jolpica (Ergast successor) |
 | **OpenF1** | intervals, pit durations, race control | 2023+ only; later live mode |
 
-- **Scope:** dry races 2019–2025, all circuits, for lap-time training; Bahrain for
+- **Scope:** dry races 2021–2025, all circuits, for lap-time training; Bahrain for
   simulation and UI in the MVP. 2026+ is a new regulation era — add as a separate
   era once it has enough data.
 - **Volume:** ~24k laps/season → ~90–110k usable laps after cleaning.
@@ -117,6 +117,15 @@ Carlo: Spearman ρ, top-1 agreement, latency speed-up.
   F1 TV sign-in (FastF1 3.9 supports `F1_USERNAME`/`F1_PASSWORD`). Without it FastF1
   falls back to its community mirror, which covers **2021–2022 only** (44/44 races;
   0 for 2019–2020 and 2023–2025).
+- **Sources used:** FastF1 mirror for 2021–2022, **OpenF1** for 2023–2025 (adapter rebuilds
+  FastF1-style laps; track status replayed from race-control messages; line position
+  derived from timing). Classification and qualifying from Jolpica. Both adapters write
+  the same raw schema (`strategist.data.sources`), and `races.parquet` records the source.
+- **Validation of the OpenF1 adapter** (Bahrain 2023–2025): pit in-laps match stint
+  changes for every driver; fresh-stint `TyreLife` starts at 1 as in FastF1; rebuilt
+  SC/VSC laps match the real races; line order equals timing order. Official
+  classification differs only by post-race penalties/DSQs, so **simulator backtests
+  compare against road order at the line**, not the official classification.
 
 **Why Bahrain:** always dry (night race), high degradation, varied strategies
 (1–3 stops), overtaking is possible, on the calendar every season.
@@ -166,7 +175,7 @@ Rendering: SVG/Canvas + D3/visx. Three.js only as optional, contained polish.
 
 ## 6. Scope
 
-**MVP:** Bahrain 2019–2025 · dry with temperature variation · SC/VSC events ·
+**MVP:** Bahrain 2021–2025 · dry with temperature variation · SC/VSC events ·
 Network A + 3 baselines with written evaluation · simulator + backtest report ·
 Monte Carlo optimiser · builder, comparison, replay · deployed.
 
@@ -217,3 +226,4 @@ docs/                  design, model card, evaluation reports
 | 2026-10-25 | Rendering: 2D SVG + D3/visx; Three.js optional later |
 | 2026-10-25 | No database in MVP (Parquet + DuckDB) |
 | 2026-10-25 | Monorepo on GitHub, private until MVP is presentable |
+| 2026-10-25 | No F1 TV: seasons narrowed to 2021–2025 (FastF1 mirror 2021–22, OpenF1 2023–25); split train 2021–23 / val 2024 / test 2025 |

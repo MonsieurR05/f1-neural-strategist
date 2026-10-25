@@ -1,10 +1,14 @@
 # Data scope for ingestion and lap-time model training. See docs/DESIGN.md §3.
-seasons: [2019, 2020, 2021, 2022, 2023, 2024, 2025]
-session: R              # races only
+# Which adapter fetches each season. Without an F1 TV sign-in, FastF1 only reaches its
+# community mirror (2021-2022); OpenF1 covers 2023+. See docs/DESIGN.md §3.
+sources:
+  fastf1: [2021, 2022]
+  openf1: [2023, 2024, 2025]
+
 dry_only: true
 
 split:                  # by season, never by random laps
-  train: [2019, 2020, 2021, 2022, 2023]
+  train: [2021, 2022, 2023]
   val: [2024]
   test: [2025]
 
@@ -20,6 +24,7 @@ circuit_aliases:
 
 paths:
   fastf1_cache: data/cache
+  openf1_cache: data/cache/openf1
   raw: data/raw
   processed: data/processed
 

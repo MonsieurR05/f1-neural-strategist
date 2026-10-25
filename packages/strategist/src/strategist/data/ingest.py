@@ -1,4 +1,4 @@
-"""Download race sessions from FastF1 into per-race raw Parquet files.
+"""Download races into per-race raw Parquet files, using the source configured for each season.
 
 Usage (from the repository root):
 
@@ -7,12 +7,11 @@ Usage (from the repository root):
 
 Output, one directory per race at ``<raw>/<year>/<round:02d>/``:
 
-    laps.parquet     FastF1 laps joined with per-lap weather
+    laps.parquet     laps joined with per-lap weather (schema: strategist.data.sources)
     results.parquet  classification, grid, status
     quali.parquet    best qualifying lap per driver (the pre-race pace prior)
-    meta.json        event info; written last, so its presence marks a complete race
+    meta.json        event info and data source; written last, so it marks a complete race
 
-Timedelta columns are stored as float seconds; column names are otherwise FastF1's.
 The run is idempotent: complete races are skipped, so an interrupted run can be restarted.
 """
 
@@ -24,28 +23,12 @@ from pathlib import Path
 
 import fastf1
 import pandas as pd
-from fastf1.exceptions import DataNotLoadedError, RateLimitExceededError
+from fastf1.exceptions import RateLimitExceededError
 
 from strategist.config import load_config
+from strategist.data.sources import RaceData, TimingUnavailableError, make_source
 
 log = logging.getLogger(__name__)
-
-
-class TimingUnavailableError(RuntimeError):
-    """FastF1 could not get lap timing for a session (not a transient error)."""
-
-WEATHER_COLUMNS = ["AirTemp", "TrackTemp", "Humidity", "Pressure", "Rainfall", "WindSpeed"]
-RESULT_COLUMNS = [
-    "DriverNumber", "Abbreviation", "TeamName", "Position", "ClassifiedPosition",
-    "GridPosition", "Status", "Points", "Laps", "Time",
-]
-
-
-def timedeltas_to_seconds(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.copy()
-    for col in df.select_dtypes(include="timedelta64[ns]").columns:
-        df[col] = df[col].dt.total_seconds()
-    return df
 
 
 def race_dir(raw_root: Path, year: int, round_number: int) -> Path:
@@ -64,75 +47,30 @@ def season_rounds(year: int, event_filter: str | None = None) -> list[pd.Series]
     return events
 
 
-def fetch_race_laps(year: int, round_number: int) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
-    session = fastf1.get_session(year, round_number, "R")
-    session.load(laps=True, telemetry=False, weather=True, messages=False)
-
-    try:
-        laps = pd.DataFrame(session.laps).reset_index(drop=True)
-    except DataNotLoadedError:
-        raise TimingUnavailableError(
-            "no timing data: livetiming.formula1.com needs an F1 TV sign-in "
-            "(F1_USERNAME/F1_PASSWORD) and the FastF1 mirror lacks this session"
-        ) from None
-    try:
-        weather = session.laps.get_weather_data().reset_index(drop=True)
-        laps = pd.concat([laps, weather.reindex(columns=WEATHER_COLUMNS)], axis=1)
-    except Exception as exc:  # weather feed is missing for a few sessions
-        log.warning("%s R%02d: no weather data (%s)", year, round_number, exc)
-        for col in WEATHER_COLUMNS:
-            laps[col] = pd.NA
-    laps = timedeltas_to_seconds(laps)
-
-    results = timedeltas_to_seconds(
-        pd.DataFrame(session.results).reindex(columns=RESULT_COLUMNS).reset_index(drop=True)
-    )
-
-    meta = {
-        "total_laps": session.total_laps,
-        "laps_completed": int(laps["LapNumber"].max()) if len(laps) else 0,
-    }
-    return laps, results, meta
-
-
-def fetch_quali_best(year: int, round_number: int) -> pd.DataFrame:
-    session = fastf1.get_session(year, round_number, "Q")
-    session.load(laps=True, telemetry=False, weather=False, messages=False)
-    laps = session.laps
-    valid = laps[laps["Deleted"].ne(True) & laps["LapTime"].notna()]
-    best = valid.groupby("Driver")["LapTime"].min().dt.total_seconds()
-    return best.rename("QualiBestS").reset_index()
-
-
-def ingest_race(year: int, event: pd.Series, raw_root: Path) -> None:
+def write_race(race: RaceData, year: int, event: pd.Series, source: str, raw_root: Path) -> None:
     rnd = int(event["RoundNumber"])
-    laps, results, meta = fetch_race_laps(year, rnd)
     out = race_dir(raw_root, year, rnd)
     out.mkdir(parents=True, exist_ok=True)
+
+    laps = race.laps.copy()
     laps.insert(0, "Year", year)
     laps.insert(1, "Round", rnd)
     laps.to_parquet(out / "laps.parquet", index=False)
-    results.to_parquet(out / "results.parquet", index=False)
+    race.results.to_parquet(out / "results.parquet", index=False)
+    race.quali.to_parquet(out / "quali.parquet", index=False)
 
-    try:
-        quali = fetch_quali_best(year, rnd)
-    except RateLimitExceededError:
-        raise
-    except Exception as exc:
-        log.warning("%s R%02d: qualifying unavailable (%s)", year, rnd, exc)
-        quali = pd.DataFrame({"Driver": pd.Series(dtype=str), "QualiBestS": pd.Series(dtype=float)})
-    quali.to_parquet(out / "quali.parquet", index=False)
-
-    meta.update({
+    meta = {
+        **race.meta,
         "year": year,
         "round": rnd,
         "event_name": event["EventName"],
         "location": event["Location"],
         "country": event["Country"],
         "event_date": event["EventDate"].date().isoformat(),
+        "source": source,
         "fastf1_version": fastf1.__version__,
         "ingested_at": datetime.now(UTC).isoformat(timespec="seconds"),
-    })
+    }
     (out / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
 
 
@@ -152,17 +90,24 @@ def main(argv: list[str] | None = None) -> int:
     fastf1.Cache.configure(cache_dir=str(cache))
     raw_root = Path(cfg["paths"]["raw"])
 
+    source_by_year = {y: name for name, years in cfg["sources"].items() for y in years}
+    sources = {}
     failures = []
-    for year in args.seasons or cfg["seasons"]:
+    for year in args.seasons or sorted(source_by_year):
+        if year not in source_by_year:
+            log.error("no data source configured for %d", year)
+            return 1
+        name = source_by_year[year]
+        source = sources.setdefault(name, make_source(name, cfg))
         for event in season_rounds(year, args.event):
             rnd = int(event["RoundNumber"])
             label = f"{year} R{rnd:02d} {event['EventName']}"
             if (race_dir(raw_root, year, rnd) / "meta.json").exists():
                 log.info("skip  %s (already ingested)", label)
                 continue
-            log.info("fetch %s", label)
+            log.info("fetch %s [%s]", label, name)
             try:
-                ingest_race(year, event, raw_root)
+                write_race(source.fetch(year, event), year, event, name, raw_root)
             except RateLimitExceededError as exc:
                 log.error("API rate limit hit (%s). Re-run later to resume.", exc)
                 return 2
