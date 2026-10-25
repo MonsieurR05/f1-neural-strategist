@@ -28,6 +28,14 @@ def strategy_from_laps(driver_laps: pd.DataFrame) -> Strategy:
     return Strategy(stints or [Stint("MEDIUM", 1)])
 
 
+def nominated_hardness(laps: pd.DataFrame) -> dict[str, float] | None:
+    """Hardness of the race's nominated hard/medium/soft (``None`` if not in the table)."""
+    cols = [f"h_{c}" for c in COMPOUNDS]
+    if not set(cols) <= set(laps.columns) or laps[cols].iloc[0].isna().any():
+        return None
+    return {c: float(laps[f"h_{c}"].iloc[0]) for c in COMPOUNDS}
+
+
 def finishers(results: pd.DataFrame) -> set[str]:
     status = results["Status"].fillna("").astype(str)
     return set(results.loc[status.str.contains(FINISHED), "Abbreviation"])
@@ -66,7 +74,8 @@ def setup_from_history(race_laps: pd.DataFrame, results: pd.DataFrame,
     setup = RaceSetup(
         circuit=str(laps["circuit"].iat[0]), total_laps=total,
         track_temp=float(laps["track_temp"].median()), cars=cars, start_lap=start_lap,
-        start_times=start - start.min(), events=events, retirements=retirements)
+        start_times=start - start.min(), events=events, retirements=retirements,
+        hardness=nominated_hardness(laps))
 
     # actual road order at the finish and positions per lap
     last = laps.dropna(subset=["session_time_s"]).groupby("driver").agg(

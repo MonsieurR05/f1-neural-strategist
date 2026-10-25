@@ -24,7 +24,8 @@ def random_batch(n: int, ages: torch.Tensor) -> Batch:
                  compound=torch.randint(0, 3, (n,), generator=g),
                  context=torch.randn(n, len(CONTEXT_FEATURES), generator=g),
                  tyre_life=ages, laps_remaining=torch.full((n,), 20.0), fresh=torch.ones(n),
-                 gap=torch.full((n,), 3.0), leader=torch.zeros(n), fuel_frac=torch.full((n,), 0.4))
+                 gap=torch.full((n,), 3.0), leader=torch.zeros(n), fuel_frac=torch.full((n,), 0.4),
+                 hardness=torch.full((n,), 3.0))
 
 
 def test_degradation_is_non_decreasing_in_tyre_age_for_any_context():
@@ -72,6 +73,7 @@ def test_softer_compounds_are_faster_fresh_and_wear_more_for_any_weights():
                              for n, v in base.__dict__.items()})
                 b.tyre_life, b.circuit = ages, torch.full((len(ages),), circuit)
                 b.compound, b.fresh = torch.full((len(ages),), k), torch.full((len(ages),), fresh)
+                b.hardness = torch.full((len(ages),), 4.0 - k)  # soft 4 > medium 3 > hard 2
                 out = module(b)
                 mus[k] = (out["offset"], out["deg"])
             # fresh pace: soft ≤ medium ≤ hard; wear: soft ≥ medium ≥ hard at every age

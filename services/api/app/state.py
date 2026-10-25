@@ -20,9 +20,8 @@ from strategist.sim.race import RaceSetup
 
 MODEL_CAVEATS = [
     "Simulated outcomes are counterfactual estimates, not predictions of what would have happened.",
-    "Compound labels (soft/medium/hard) map to different Pirelli compounds between events and "
-    "seasons; the lap-time model does not yet use the C1–C5 mapping, so compound comparisons "
-    "can be biased (e.g. it is too pessimistic about the 2024 Bahrain soft, so it over-recommends the medium).",
+    "Tyres are modelled by their Pirelli compound (C0–C6 on an approximate hardness scale); "
+    "differences between strategies of about a second are within the model's uncertainty.",
     "Other drivers keep their strategies; they do not react to the optimised driver.",
     "Dry races only. Tyre wear beyond the ages observed at the circuit is extrapolated.",
 ]

@@ -15,7 +15,7 @@ COMPOUNDS = ["SOFT", "MEDIUM", "HARD"]
 NUMERIC_FEATURES = [
     "tyre_life", "fresh_tyre", "stint", "lap_number", "laps_remaining", "fuel_frac",
     "total_laps", "quali_gap_pct", "quali_missing", "grid_position", "track_temp",
-    "air_temp", "humidity", "gap_ahead_s", "is_leader",
+    "air_temp", "humidity", "gap_ahead_s", "is_leader", "hardness",
 ]
 CATEGORICAL_FEATURES = ["circuit", "compound"]
 
@@ -47,6 +47,8 @@ def prepare(laps: pd.DataFrame) -> pd.DataFrame:
     df["is_leader"] = df["interval_start_s"].isna().astype(float)
     df["gap_ahead_s"] = df["interval_start_s"].fillna(GAP_CAP_S).clip(upper=GAP_CAP_S)
     df["fresh_tyre"] = df["fresh_tyre"].astype(float)
+    if "hardness" not in df:  # Pirelli compound hardness (data.compounds); NaN if unknown
+        df["hardness"] = np.nan
     for col in ("circuit", "compound"):
         df[col] = df[col].astype(str)
     return df

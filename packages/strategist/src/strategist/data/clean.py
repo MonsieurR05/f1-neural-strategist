@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 
 from strategist.config import load_config
+from strategist.data.compounds import add_hardness, load_table
 
 log = logging.getLogger(__name__)
 
@@ -233,6 +234,16 @@ def main(argv: list[str] | None = None) -> int:
 
     laps = pd.concat(all_laps, ignore_index=True)
     races = pd.DataFrame(races)
+    table_path = Path(cfg.get("compounds", "configs/compounds.csv"))
+    if table_path.exists():
+        laps = add_hardness(laps, load_table(table_path))
+        missing = races.loc[~races["race_id"].isin(laps.dropna(subset=["h_SOFT"])["race_id"]), "race_id"]
+        if len(missing):
+            log.warning("no compound nominations for %d race(s): %s", len(missing), ", ".join(missing))
+    else:
+        log.warning("%s not found: compound hardness unavailable", table_path)
+        for col in ("h_SOFT", "h_MEDIUM", "h_HARD", "hardness"):
+            laps[col] = np.nan
     laps.to_parquet(out_root / "laps.parquet", index=False)
     races.to_parquet(out_root / "races.parquet", index=False)
 

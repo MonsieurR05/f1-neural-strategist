@@ -33,6 +33,7 @@ import numpy as np
 import pandas as pd
 import torch
 
+from strategist.data.compounds import DEFAULT_HARDNESS
 from strategist.models.features import COMPOUNDS, GAP_CAP_S
 from strategist.models.lapnet import Batch, LapTimeNet
 from strategist.sim.params import SimParams
@@ -106,6 +107,8 @@ class RaceSetup:
     # Known events (replay/backtest) or ``None`` to sample them (forecast).
     events: dict[int, str] | None = None          # lap → "SC" | "VSC" | "RED"
     retirements: dict[str, int] | None = None     # driver → last completed lap
+    # Pirelli hardness of the nominated compounds (data.compounds); typical values if None
+    hardness: dict[str, float] | None = None
 
     def driver_index(self, driver: str) -> int:
         return [c.driver for c in self.cars].index(driver)
@@ -221,6 +224,7 @@ class Simulator:
                               "total_laps": float(L), "compound": "MEDIUM"} for c in setup.cars])
         circuit_idx, context = self.net.static_inputs(cars)
         q = np.array([c.q_s for c in setup.cars])
+        h_of = np.array([(setup.hardness or {}).get(c, DEFAULT_HARDNESS[c]) for c in COMPOUNDS])
 
         # tyre plans [R, C, L] and pit flags [R, C, L+1]; only the target varies across runs
         plans = [c.strategy.tyre_plan(L) for c in setup.cars]
@@ -307,6 +311,7 @@ class Simulator:
                 gap=torch.from_numpy(gap_feat.reshape(-1)).float(),
                 leader=torch.from_numpy(leader.reshape(-1).astype(np.float32)),
                 fuel_frac=torch.full((R * C,), laps_remaining / L),
+                hardness=torch.from_numpy(h_of[compound[:, :, lap - 1]].reshape(-1)).float(),
             )
             mu_pct, sig_pct = (self.net.predict_batch(b, self.members) if self.members
                                else self.net.predict_batch(b))

@@ -7,6 +7,9 @@ sources:
 
 dry_only: true
 
+# Pirelli compounds nominated as hard/medium/soft per race (strategist.data.compounds)
+compounds: configs/compounds.csv
+
 split:                  # by season, never by random laps
   train: [2021, 2022, 2023]
   val: [2024]

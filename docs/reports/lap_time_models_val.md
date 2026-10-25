@@ -1,6 +1,6 @@
 # Lap-time models: val season (2024)
 
-_Generated 2026-10-25 20:02 UTC from commit `9ac83ac` by `python -m strategist.eval.run`. Do not edit by hand._
+_Generated 2026-10-25 22:25 UTC from commit `9e97228` by `python -m strategist.eval.run`. Do not edit by hand._
 
 **Task.** Forecast every clean lap of an unseen season from information available before the lap starts (qualifying pace, circuit, tyres, lap number, weather sample, gap to the car ahead). Trained on 2021, 2022, 2023 (48,496 laps); scored on 19,969 laps across 20 races.
 
@@ -14,8 +14,8 @@ Excluded because qualifying was unrepresentative of race conditions (a race lap 
 |---|---|---|---|---|---|---|---|---|
 | circuit_pace | 1.166 | 1.540 | 0.852 | 0.051 | 0.000 | 1.994 | 0.886 | -0.360 |
 | fuel_deg_linear | 0.922 | 1.271 | 0.533 | 0.052 | -0.020 | 1.775 | 0.891 | -0.342 |
-| lightgbm | 0.927 | 1.288 | 0.521 | 0.055 | -0.069 | 1.850 | 0.889 | -0.264 |
-| lap_net | 0.888 | 1.232 | 0.537 | 0.057 | -0.116 | 1.670 | 0.916 | -0.237 |
+| lightgbm | 0.915 | 1.275 | 0.519 | 0.054 | -0.061 | 1.831 | 0.892 | -0.267 |
+| lap_net | 0.916 | 1.274 | 0.538 | 0.055 | -0.072 | 1.660 | 0.909 | -0.254 |
 
 ### Differences vs `lightgbm` (95% race-level paired bootstrap)
 
@@ -23,9 +23,9 @@ Negative = better than the reference. An interval spanning 0 means the differenc
 
 | model | Δmae_s | Δwithin_mae_s | Δnll |
 |---|---|---|---|
-| circuit_pace | +0.240 [+0.143, +0.334] | +0.331 [+0.272, +0.389] | +0.144 [+0.030, +0.236] |
-| fuel_deg_linear | -0.005 [-0.079, +0.067] | +0.012 [-0.003, +0.028] | -0.075 [-0.252, +0.056] |
-| lap_net | -0.039 [-0.100, +0.008] | +0.016 [-0.021, +0.072] | -0.181 [-0.681, +0.138] |
+| circuit_pace | +0.251 [+0.156, +0.341] | +0.333 [+0.273, +0.393] | +0.163 [+0.061, +0.250] |
+| fuel_deg_linear | +0.007 [-0.069, +0.080] | +0.014 [-0.001, +0.032] | -0.056 [-0.221, +0.070] |
+| lap_net | +0.001 [-0.043, +0.040] | +0.019 [-0.024, +0.086] | -0.171 [-0.653, +0.143] |
 
 ## Seen vs unseen circuits
 
@@ -35,15 +35,15 @@ MAE (s):
 
 | group | circuit_pace | fuel_deg_linear | lightgbm | lap_net | laps |
 |---|---|---|---|---|---|
-| seen circuit | 1.193 | 0.946 | 0.953 | 0.911 | 18043 |
-| unseen circuit | 0.917 | 0.696 | 0.678 | 0.671 | 1926 |
+| seen circuit | 1.193 | 0.946 | 0.942 | 0.942 | 18043 |
+| unseen circuit | 0.917 | 0.696 | 0.668 | 0.673 | 1926 |
 
 Within-race MAE (s):
 
 | group | circuit_pace | fuel_deg_linear | lightgbm | lap_net | laps |
 |---|---|---|---|---|---|
-| seen circuit | 0.870 | 0.536 | 0.524 | 0.532 | 18043 |
-| unseen circuit | 0.681 | 0.507 | 0.495 | 0.593 | 1926 |
+| seen circuit | 0.870 | 0.536 | 0.522 | 0.533 | 18043 |
+| unseen circuit | 0.681 | 0.507 | 0.494 | 0.585 | 1926 |
 
 ## Sakhir (MVP circuit)
 
@@ -51,16 +51,16 @@ Within-race MAE (s):
 |---|---|---|---|---|---|---|---|
 | circuit_pace | 0.955 | 0.915 | 0.052 | 0.000 | 1.687 | 0.990 | -0.037 |
 | fuel_deg_linear | 0.454 | 0.366 | 0.045 | 0.123 | 1.330 | 0.994 | 0.077 |
-| lightgbm | 0.419 | 0.369 | 0.061 | -0.186 | 1.353 | 0.993 | 0.010 |
-| lap_net | 0.431 | 0.330 | 0.037 | 0.292 | 1.201 | 0.989 | 0.188 |
+| lightgbm | 0.422 | 0.365 | 0.058 | -0.111 | 1.354 | 0.993 | 0.097 |
+| lap_net | 0.470 | 0.333 | 0.038 | 0.269 | 1.217 | 0.991 | 0.270 |
 
 ## By compound (within-race MAE, s)
 
 | group | circuit_pace | fuel_deg_linear | lightgbm | lap_net | laps |
 |---|---|---|---|---|---|
-| HARD | 0.618 | 0.496 | 0.483 | 0.488 | 11949 |
-| MEDIUM | 0.539 | 0.457 | 0.446 | 0.499 | 6698 |
-| SOFT | 0.815 | 0.463 | 0.477 | 0.454 | 1322 |
+| HARD | 0.618 | 0.496 | 0.483 | 0.486 | 11949 |
+| MEDIUM | 0.539 | 0.457 | 0.443 | 0.491 | 6698 |
+| SOFT | 0.815 | 0.463 | 0.474 | 0.446 | 1322 |
 
 ## By tyre age (within-race MAE, s)
 
@@ -68,25 +68,25 @@ Long stints are where strategy counterfactuals extrapolate, so this is the band 
 
 | group | circuit_pace | fuel_deg_linear | lightgbm | lap_net | laps |
 |---|---|---|---|---|---|
-| 11–20 | 0.795 | 0.415 | 0.426 | 0.403 | 6901 |
-| 1–10 | 0.840 | 0.483 | 0.462 | 0.467 | 7345 |
-| 21–30 | 0.577 | 0.412 | 0.418 | 0.409 | 3647 |
-| >30 | 0.574 | 0.524 | 0.534 | 0.528 | 2076 |
+| 11–20 | 0.795 | 0.415 | 0.422 | 0.409 | 6901 |
+| 1–10 | 0.840 | 0.483 | 0.462 | 0.477 | 7345 |
+| 21–30 | 0.577 | 0.412 | 0.413 | 0.403 | 3647 |
+| >30 | 0.574 | 0.524 | 0.536 | 0.523 | 2076 |
 
 ## Races with the largest absolute error
 
 Large absolute but small within-race error points at a race-level pace offset (e.g. qualifying run in different conditions from the race) rather than a modelling failure.
 
-Model: `lap_net`.
+Model: `lightgbm`.
 
 | race | laps | mae_s | within_mae_s |
 |---|---|---|---|
-| 2024_08 | 1171 | 2.435 | 0.965 |
-| 2024_10 | 1200 | 1.545 | 0.464 |
-| 2024_13 | 1254 | 1.437 | 0.544 |
-| 2024_23 | 714 | 1.409 | 1.263 |
-| 2024_16 | 926 | 1.309 | 0.506 |
-| 2024_15 | 1353 | 0.875 | 0.428 |
+| 2024_08 | 1171 | 2.750 | 0.971 |
+| 2024_10 | 1200 | 1.766 | 0.522 |
+| 2024_23 | 714 | 1.511 | 0.694 |
+| 2024_16 | 926 | 1.392 | 0.489 |
+| 2024_13 | 1254 | 1.347 | 0.589 |
+| 2024_15 | 1353 | 0.805 | 0.413 |
 
 ## `fuel_deg_linear` at Sakhir, in seconds
 
@@ -98,27 +98,27 @@ Coefficients scaled by the median qualifying lap at Sakhir (91.3 s). The fuel te
 
 ## `lap_net` at Sakhir, in seconds
 
-Fuel effect: 0.078 s per lap of fuel on board. Degradation relative to a 1-lap-old tyre (median conditions). Training data at Sakhir reaches 31 laps of tyre age; beyond that the curve is extrapolated by construction (non-decreasing, convex).
+Fuel effect: 0.076 s per lap of fuel on board. Degradation relative to a 1-lap-old tyre (median conditions). Training data at Sakhir reaches 31 laps of tyre age; beyond that the curve is extrapolated by construction (non-decreasing, convex).
 
 | compound | age 1 | age 5 | age 10 | age 15 | age 20 | age 25 | age 30 | age 35 | age 40 |
 |---|---|---|---|---|---|---|---|---|---|
-| SOFT | 0.00 | 0.69 | 1.62 | 2.65 | 3.75 | 4.90 | 6.10 | 7.35 | 8.64 |
-| MEDIUM | 0.00 | 0.31 | 0.76 | 1.31 | 1.94 | 2.60 | 3.32 | 4.08 | 4.87 |
-| HARD | 0.00 | 0.27 | 0.67 | 1.16 | 1.73 | 2.34 | 2.98 | 3.68 | 4.41 |
+| SOFT | 0.00 | 0.42 | 0.96 | 1.56 | 2.19 | 2.86 | 3.56 | 4.29 | 5.03 |
+| MEDIUM | 0.00 | 0.42 | 0.96 | 1.56 | 2.19 | 2.86 | 3.56 | 4.29 | 5.03 |
+| HARD | 0.00 | 0.42 | 0.96 | 1.56 | 2.19 | 2.86 | 3.56 | 4.29 | 5.03 |
 
 ## `lightgbm` feature importance (share of total gain, %)
 
-Boosting rounds: 114 (early stopping on the last training season).
+Boosting rounds: 140 (early stopping on the last training season).
 
 | feature | gain_% |
 |---|---|
-| quali_gap_pct | 47.4 |
-| fuel_frac | 14.4 |
-| lap_number | 10.8 |
-| circuit | 10.3 |
-| track_temp | 5.2 |
-| total_laps | 2.9 |
-| tyre_life | 2.9 |
+| quali_gap_pct | 47.6 |
+| fuel_frac | 15.3 |
+| circuit | 11.1 |
+| lap_number | 9.5 |
+| track_temp | 4.3 |
+| total_laps | 3.6 |
+| tyre_life | 2.7 |
 | grid_position | 2.1 |
-| laps_remaining | 1.3 |
-| gap_ahead_s | 1.1 |
+| gap_ahead_s | 1.2 |
+| laps_remaining | 0.9 |

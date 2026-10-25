@@ -1,0 +1,115 @@
+year,round,event_name,hard,medium,soft,source
+2021,1,Bahrain Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2021_Bahrain_Grand_Prix
+2021,2,Emilia Romagna Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2021_Emilia-Romagna_Grand_Prix
+2021,3,Portuguese Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2021_Portuguese_Grand_Prix
+2021,4,Spanish Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2021_Spanish_Grand_Prix
+2021,5,Monaco Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2021_Monaco_Grand_Prix
+2021,6,Azerbaijan Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2021_Azerbaijan_Grand_Prix
+2021,7,French Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2021_French_Grand_Prix
+2021,8,Styrian Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2021_Styrian_Grand_Prix
+2021,9,Austrian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2021_Austrian_Grand_Prix
+2021,10,British Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2021_British_Grand_Prix
+2021,11,Hungarian Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2021_Hungarian_Grand_Prix
+2021,12,Belgian Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2021_Belgian_Grand_Prix
+2021,13,Dutch Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2021_Dutch_Grand_Prix
+2021,14,Italian Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2021_Italian_Grand_Prix
+2021,15,Russian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2021_Russian_Grand_Prix
+2021,16,Turkish Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2021_Turkish_Grand_Prix
+2021,17,United States Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2021_United_States_Grand_Prix
+2021,18,Mexico City Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2021_Mexico_City_Grand_Prix
+2021,19,São Paulo Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2021_S%C3%A3o_Paulo_Grand_Prix
+2021,20,Qatar Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2021_Qatar_Grand_Prix
+2021,21,Saudi Arabian Grand Prix,C2,C3,C4,https://www.formula1.com/en/latest/article/what-tyres-will-the-teams-and-drivers-have-for-the-first-ever-saudi-arabian.4Hzp0eH883sNfCYFjUKQMr
+2021,22,Abu Dhabi Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2021_Abu_Dhabi_Grand_Prix
+2022,1,Bahrain Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2022_Bahrain_Grand_Prix
+2022,2,Saudi Arabian Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2022_Saudi_Arabian_Grand_Prix
+2022,3,Australian Grand Prix,C2,C3,C5,https://en.wikipedia.org/wiki/2022_Australian_Grand_Prix
+2022,4,Emilia Romagna Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2022_Emilia-Romagna_Grand_Prix
+2022,5,Miami Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2022_Miami_Grand_Prix
+2022,6,Spanish Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2022_Spanish_Grand_Prix
+2022,7,Monaco Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2022_Monaco_Grand_Prix
+2022,8,Azerbaijan Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2022_Azerbaijan_Grand_Prix
+2022,9,Canadian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2022_Canadian_Grand_Prix
+2022,10,British Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2022_British_Grand_Prix
+2022,11,Austrian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2022_Austrian_Grand_Prix
+2022,12,French Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2022_French_Grand_Prix
+2022,13,Hungarian Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2022_Hungarian_Grand_Prix
+2022,14,Belgian Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2022_Belgian_Grand_Prix
+2022,15,Dutch Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2022_Dutch_Grand_Prix
+2022,16,Italian Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2022_Italian_Grand_Prix
+2022,17,Singapore Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2022_Singapore_Grand_Prix
+2022,18,Japanese Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2022_Japanese_Grand_Prix
+2022,19,United States Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2022_United_States_Grand_Prix
+2022,20,Mexico City Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2022_Mexico_City_Grand_Prix
+2022,21,São Paulo Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2022_S%C3%A3o_Paulo_Grand_Prix
+2022,22,Abu Dhabi Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2022_Abu_Dhabi_Grand_Prix
+2023,1,Bahrain Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2023_Bahrain_Grand_Prix
+2023,2,Saudi Arabian Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2023_Saudi_Arabian_Grand_Prix
+2023,3,Australian Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2023_Australian_Grand_Prix
+2023,4,Azerbaijan Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2023_Azerbaijan_Grand_Prix
+2023,5,Miami Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2023_Miami_Grand_Prix
+2023,6,Monaco Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2023_Monaco_Grand_Prix
+2023,7,Spanish Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2023_Spanish_Grand_Prix
+2023,8,Canadian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2023_Canadian_Grand_Prix
+2023,9,Austrian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2023_Austrian_Grand_Prix
+2023,10,British Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2023_British_Grand_Prix
+2023,11,Hungarian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2023_Hungarian_Grand_Prix
+2023,12,Belgian Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2023_Belgian_Grand_Prix
+2023,13,Dutch Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2023_Dutch_Grand_Prix
+2023,14,Italian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2023_Italian_Grand_Prix
+2023,15,Singapore Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2023_Singapore_Grand_Prix
+2023,16,Japanese Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2023_Japanese_Grand_Prix
+2023,17,Qatar Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2023_Qatar_Grand_Prix
+2023,18,United States Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2023_United_States_Grand_Prix
+2023,19,Mexico City Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2023_Mexico_City_Grand_Prix
+2023,20,São Paulo Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2023_S%C3%A3o_Paulo_Grand_Prix
+2023,21,Las Vegas Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2023_Las_Vegas_Grand_Prix
+2023,22,Abu Dhabi Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2023_Abu_Dhabi_Grand_Prix
+2024,1,Bahrain Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2024_Bahrain_Grand_Prix
+2024,2,Saudi Arabian Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2024_Saudi_Arabian_Grand_Prix
+2024,3,Australian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2024_Australian_Grand_Prix
+2024,4,Japanese Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2024_Japanese_Grand_Prix
+2024,5,Chinese Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2024_Chinese_Grand_Prix
+2024,6,Miami Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2024_Miami_Grand_Prix
+2024,7,Emilia Romagna Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2024_Emilia-Romagna_Grand_Prix
+2024,8,Monaco Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2024_Monaco_Grand_Prix
+2024,9,Canadian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2024_Canadian_Grand_Prix
+2024,10,Spanish Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2024_Spanish_Grand_Prix
+2024,11,Austrian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2024_Austrian_Grand_Prix
+2024,12,British Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2024_British_Grand_Prix
+2024,13,Hungarian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2024_Hungarian_Grand_Prix
+2024,14,Belgian Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2024_Belgian_Grand_Prix
+2024,15,Dutch Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2024_Dutch_Grand_Prix
+2024,16,Italian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2024_Italian_Grand_Prix
+2024,17,Azerbaijan Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2024_Azerbaijan_Grand_Prix
+2024,18,Singapore Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2024_Singapore_Grand_Prix
+2024,19,United States Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2024_United_States_Grand_Prix
+2024,20,Mexico City Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2024_Mexico_City_Grand_Prix
+2024,21,São Paulo Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2024_S%C3%A3o_Paulo_Grand_Prix
+2024,22,Las Vegas Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2024_Las_Vegas_Grand_Prix
+2024,23,Qatar Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2024_Qatar_Grand_Prix
+2024,24,Abu Dhabi Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2024_Abu_Dhabi_Grand_Prix
+2025,1,Australian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2025_Australian_Grand_Prix
+2025,2,Chinese Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2025_Chinese_Grand_Prix
+2025,3,Japanese Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2025_Japanese_Grand_Prix
+2025,4,Bahrain Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2025_Bahrain_Grand_Prix
+2025,5,Saudi Arabian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2025_Saudi_Arabian_Grand_Prix
+2025,6,Miami Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2025_Miami_Grand_Prix
+2025,7,Emilia Romagna Grand Prix,C4,C5,C6,https://en.wikipedia.org/wiki/2025_Emilia-Romagna_Grand_Prix
+2025,8,Monaco Grand Prix,C4,C5,C6,https://en.wikipedia.org/wiki/2025_Monaco_Grand_Prix
+2025,9,Spanish Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2025_Spanish_Grand_Prix
+2025,10,Canadian Grand Prix,C4,C5,C6,https://en.wikipedia.org/wiki/2025_Canadian_Grand_Prix
+2025,11,Austrian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2025_Austrian_Grand_Prix
+2025,12,British Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2025_British_Grand_Prix
+2025,13,Belgian Grand Prix,C1,C3,C4,https://en.wikipedia.org/wiki/2025_Belgian_Grand_Prix
+2025,14,Hungarian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2025_Hungarian_Grand_Prix
+2025,15,Dutch Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2025_Dutch_Grand_Prix
+2025,16,Italian Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2025_Italian_Grand_Prix
+2025,17,Azerbaijan Grand Prix,C4,C5,C6,https://en.wikipedia.org/wiki/2025_Azerbaijan_Grand_Prix
+2025,18,Singapore Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2025_Singapore_Grand_Prix
+2025,19,United States Grand Prix,C1,C3,C4,https://en.wikipedia.org/wiki/2025_United_States_Grand_Prix
+2025,20,Mexico City Grand Prix,C2,C4,C5,https://en.wikipedia.org/wiki/2025_Mexico_City_Grand_Prix
+2025,21,São Paulo Grand Prix,C2,C3,C4,https://en.wikipedia.org/wiki/2025_S%C3%A3o_Paulo_Grand_Prix
+2025,22,Las Vegas Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2025_Las_Vegas_Grand_Prix
+2025,23,Qatar Grand Prix,C1,C2,C3,https://en.wikipedia.org/wiki/2025_Qatar_Grand_Prix
+2025,24,Abu Dhabi Grand Prix,C3,C4,C5,https://en.wikipedia.org/wiki/2025_Abu_Dhabi_Grand_Prix

@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
+from strategist.data.compounds import DEFAULT_HARDNESS
 from strategist.models.features import COMPOUNDS, GAP_CAP_S
 from strategist.models.lapnet import LapTimeNet
 from strategist.sim.params import SimParams
@@ -172,6 +173,7 @@ def time_budget(net: LapTimeNet, params: SimParams, setup: RaceSetup, driver: st
         "compound": [COMPOUNDS[c] for c in comp[laps - 1]], "tyre_life": age[laps - 1],
         "fresh_tyre": fresh[laps - 1], "laps_remaining": (L - laps).astype(float),
         "fuel_frac": (L - laps) / L, "gap_ahead_s": GAP_CAP_S, "is_leader": 0.0,
+        "hardness": [(setup.hardness or DEFAULT_HARDNESS)[COMPOUNDS[c]] for c in comp[laps - 1]],
     })
     parts = net.components(rows)
     stops = [p for p in strategy.pit_laps if p > start]

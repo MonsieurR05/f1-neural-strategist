@@ -18,7 +18,7 @@ simulator are counterfactual estimates that the app labels as simulated.
 |---|---|
 | Pace anchor | driver's best qualifying lap `q_s` (target is lap time relative to it), gap to pole, missing-qualifying flag, grid position |
 | Circuit | learned embedding; unseen circuits use a shared "unknown" embedding trained by 10% circuit dropout |
-| Tyres | compound, tyre age, fresh/used set |
+| Tyres | compound as Pirelli hardness (C0–C6 on one scale, from `configs/compounds.csv`), tyre age, fresh/used set |
 | Fuel | laps remaining (fuel load isn't published) |
 | Traffic | gap to the car ahead at the start of the lap (capped at 10 s), race-leader flag |
 | Conditions | track temperature |
@@ -30,8 +30,8 @@ Output: mean and standard deviation of the lap time in seconds (Gaussian).
 Additive terms in percent of the qualifying lap, each a small MLP over the inputs it may use:
 
     base(circuit, quali pace, grid, race distance) + conditions(track temp)
-    + fuel_rate(circuit)·laps_remaining + offset(compound | circuit, fresh)
-    + deg(tyre age | compound, circuit, fresh) + traffic(gap, leader, circuit)
+    + fuel_rate(circuit)·laps_remaining + offset(hardness | circuit, fresh)
+    + deg(tyre age | hardness, circuit, fresh) + traffic(gap, leader, circuit)
     + interaction(all inputs except tyre age, temperature and compound, bounded ±0.5 %)
 
 Design guarantees, enforced by construction and unit-tested with random weights:
@@ -41,10 +41,12 @@ Design guarantees, enforced by construction and unit-tested with random weights:
   a "cliff"), and the interaction term never sees tyre age. Counterfactual long stints
   therefore stay physically plausible.
 - **Fuel effect ≥ 0** and linear in laps remaining, per circuit.
-- **Hardness ordering:** at every circuit and tyre state, soft ≤ medium ≤ hard in fresh-tyre
-  pace and soft ≥ medium ≥ hard in degradation at every age (hard is the base; medium and soft
-  add non-negative steps; temperature and interaction terms don't see the compound). Within
-  a race the three nominated compounds are always ordered, whatever Pirelli compounds they are.
+- **Compound hardness:** compounds enter as the nominated Pirelli compound on one hardness
+  scale (2021–22 C1–C5 → 1–5; 2023+ C0 → 1, the new C1 → 1.5, C2–C6 → 2–6). Fresh-tyre pace
+  is non-increasing and every degradation weight non-decreasing in hardness, at every circuit
+  and tyre state (non-negative combinations of increasing hardness bases; temperature and
+  interaction terms don't see the compound). So a softer compound is never slower when fresh
+  nor wears less, and within a race soft/medium/hard are ordered.
 - **Identifiability rule:** race-level conditions (temperature) only enter terms shared by
   all circuits. With one to three races per circuit, a circuit-specific temperature effect
   would be confounded with everything else that differed between those races.
@@ -68,25 +70,29 @@ a Gaussian mixture.
 
 | Metric | lap_net | LightGBM | Linear deg (analyst) |
 |---|---|---|---|
-| Lap-time MAE | **0.888 s** | 0.927 s | 0.922 s |
-| Within-race MAE (strategy-relevant) | 0.537 s | **0.521 s** | 0.533 s |
-| Gaussian NLL | **1.670** | 1.850 | 1.775 |
-| 90% interval coverage | 0.916 | 0.889 | 0.891 |
-| Bahrain lap-time MAE / within-race MAE | 0.431 / **0.330 s** | **0.419** / 0.369 s | 0.454 / 0.366 s |
-| Bahrain stint-slope skill | **+0.29** | −0.19 | +0.12 |
+| Lap-time MAE | 0.916 s | **0.915 s** | 0.922 s |
+| Within-race MAE (strategy-relevant) | 0.538 s | **0.519 s** | 0.533 s |
+| Gaussian NLL | **1.660** | 1.831 | 1.775 |
+| 90% interval coverage | 0.909 | 0.892 | 0.891 |
+| Bahrain lap-time MAE / within-race MAE | 0.470 / **0.333 s** | **0.422** / 0.365 s | 0.454 / 0.366 s |
+| Bahrain stint-slope skill | **+0.27** | −0.11 | +0.12 |
 
-Against LightGBM, race-level paired bootstrap (95%): MAE −0.039 s [−0.100, +0.008],
-within-race MAE +0.016 s [−0.021, +0.072], NLL −0.181 [−0.681, +0.138]: within race-to-race
-noise for a single season.
+(LightGBM also receives the compound hardness.) Against LightGBM, race-level paired bootstrap
+(95%): MAE +0.001 s [−0.043, +0.040], within-race MAE +0.019 s [−0.024, +0.086], NLL −0.171
+[−0.653, +0.138]: within race-to-race noise for a single season.
 
-Before the hardness-ordering constraint the network scored MAE 0.864 s / within-race 0.527 s /
-NLL 1.607 (significantly better than LightGBM on MAE), but it had learned that the Bahrain
-medium was both faster and longer-lasting than the hard. The constraint trades that fit for
-physical consistency.
+History of the compound handling, for context: with raw labels the network scored MAE
+0.864 s but believed the Bahrain medium was both faster and longer-lasting than the hard; a
+label-ordering constraint fixed that (0.888 s) but still blended different Pirelli compounds
+under one label; hardness from the nomination table fixed the blend (0.916 s on this metric,
+with the decision-level improvements below). Single-season MAE differences of a few
+hundredths are within noise; the decision-level checks are the ones that changed.
 
-Learned Bahrain behaviour (median conditions): fresh-tyre pace soft −0.72 %, medium −0.58 %,
-hard −0.27 % of the qualifying lap; degradation after 25 laps soft 5.1 s, medium 2.7 s,
-hard 2.4 s, steepening with age.
+Learned 2024 Bahrain behaviour (median conditions; hard C1, medium C2, soft C3): degradation
+after 20 laps hard 1.8 s, medium 1.9 s, soft 2.3 s; fresh-tyre pace soft fastest. Backtest
+(2024 Bahrain, held out): position MAE 2.10, 80% coverage 0.90, P(actual winner) 0.52.
+The optimiser rates Verstappen's winning soft–hard–soft within about a second of its best
+plan.
 
 ## Limitations
 
@@ -105,12 +111,10 @@ hard 2.4 s, steepening with age.
 - **Dry conditions only.** Wet races and laps are excluded from training.
 - **Associational:** observed laps reflect teams' strategy choices and tyre management, and
   fuel load is a proxy. Effects are estimates, not measured physics.
-- **Compound identity across races (most important for strategy):** soft/medium/hard map to
-  different Pirelli compounds (C1–C6) between events and seasons, and the model doesn't know
-  which. The ordering constraint makes each race internally consistent, but a label still
-  blends different rubber: "Bahrain soft" mixes 2021's C4 with 2022–24's C3, so the model is
-  too pessimistic about the 2024 soft and the optimiser over-recommends the medium. Fix: a
-  per-race C-number table (Pirelli nominations; no public dataset for 2021–25, so it has to
-  be compiled from race previews).
+- **Compound scale is approximate:** the hardness spacing is ordinal (the model only relies on
+  order), construction changes between seasons (13-inch to 18-inch wheels in 2022) aren't
+  modelled, and whether 2025's C1 equals 2024's C1 is assumed, not verified (affects six 2025
+  races, all in the test season). Nominations come from Wikipedia race articles (112 of 114
+  parsed; 2 resolved from F1/Pirelli previews; 18 cross-checked against F1/Pirelli, all agree).
 - One validation-driven change was made (the identifiability rule above); everything else was
   chosen on the inner split. The sealed 2025 test season will give the unbiased estimate.

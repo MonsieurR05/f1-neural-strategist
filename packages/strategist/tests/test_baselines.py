@@ -74,7 +74,7 @@ def test_lightgbm_fits_and_predicts_close_on_noiseless_data():
     for col, val in {"fresh_tyre": 1.0, "fuel_frac": 0.5, "total_laps": 50.0,
                      "quali_gap_pct": 1.0, "quali_missing": 0.0, "grid_position": 5.0,
                      "track_temp": 30.0, "air_temp": 25.0, "humidity": 40.0,
-                     "gap_ahead_s": GAP_CAP_S, "is_leader": 0.0}.items():
+                     "gap_ahead_s": GAP_CAP_S, "is_leader": 0.0, "hardness": 3.0}.items():
         df[col] = val
     m = LightGBMLapTime({"min_data_in_leaf": 5, "learning_rate": 0.1}, max_rounds=400,
                         early_stopping_rounds=50).fit(df)
