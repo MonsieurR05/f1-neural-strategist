@@ -22,6 +22,7 @@ def make_laps(n_laps: int = 5, drivers=("AAA", "BBB"), base: float = 90.0) -> pd
                 "lap_time_s": base,
                 "session_time_s": lap * base + i * 1.5,
                 "compound": "MEDIUM",
+                "stint": 1.0,
                 "track_status": "1",
                 "pit_in_time_s": np.nan,
                 "pit_out_time_s": np.nan,
@@ -55,6 +56,33 @@ def test_first_matching_reason_wins():
     assert reason[2] == "pit_in"
     assert reason[3] == "neutralised"
     assert reason[4] == "non_slick"
+
+
+def test_stint_change_without_pit_stop_flags_whole_driver():
+    laps = make_laps(n_laps=8)
+    aaa, bbb = laps.driver == "AAA", laps.driver == "BBB"
+    laps.loc[aaa & laps.lap_number.ge(5), "stint"] = 2.0          # no out-lap: unexplained
+    laps.loc[bbb & laps.lap_number.ge(4), "stint"] = 2.0          # proper stop on lap 3/4
+    laps.loc[bbb & laps.lap_number.eq(3), "pit_in_time_s"] = 300.0
+    laps.loc[bbb & laps.lap_number.eq(4), "pit_out_time_s"] = 320.0
+    reason = exclusions(laps)
+    assert reason[aaa & laps.lap_number.gt(1)].eq("tyre_data").all()
+    assert reason[bbb & laps.lap_number.isin([2, 5, 6])].isna().all()
+
+
+def test_stint_change_under_red_flag_is_allowed():
+    laps = make_laps(n_laps=8)
+    aaa = laps.driver == "AAA"
+    laps.loc[laps.lap_number.eq(4), "track_status"] = "15"
+    laps.loc[aaa & laps.lap_number.ge(5), "stint"] = 2.0
+    reason = exclusions(laps)
+    assert reason[aaa & laps.lap_number.isin([6, 7])].isna().all()
+
+
+def test_missing_compound_is_tyre_data():
+    laps = make_laps()
+    laps.loc[2, "compound"] = None
+    assert exclusions(laps)[2] == "tyre_data"
 
 
 def test_yellow_flag_alone_is_not_neutralised():

@@ -24,12 +24,16 @@ log = logging.getLogger(__name__)
 class FastF1Source:
     name = "fastf1"
 
+    def __init__(self, jolpica_cache: str):
+        self.jolpica_cache = jolpica_cache
+
     def fetch(self, year: int, event: pd.Series) -> RaceData:
         rnd = int(event["RoundNumber"])
         laps, results, meta = self._race(year, rnd)
         # Jolpica's Q1-Q3 times: one request instead of loading the whole qualifying
         # session, and the same definition the OpenF1 adapter uses.
-        return RaceData(laps=laps, results=results, quali=jolpica.quali_best(year, rnd), meta=meta)
+        quali = jolpica.quali_best(year, rnd, self.jolpica_cache)
+        return RaceData(laps=laps, results=results, quali=quali, meta=meta)
 
     def _race(self, year: int, rnd: int) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
         session = fastf1.get_session(year, rnd, "R")

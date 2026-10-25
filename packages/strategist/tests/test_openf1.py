@@ -6,10 +6,10 @@ from strategist.data.clean import RENAME
 from strategist.data.sources import LAP_COLUMNS
 from strategist.data.sources.openf1 import (
     build_laps,
-    expand_stints,
     lap_track_status,
     quali_best_laps,
     track_status_events,
+    tyre_laps,
 )
 
 ORIGIN = pd.Timestamp("2024-03-02T15:00:00Z")
@@ -61,18 +61,64 @@ def test_lap_track_status_includes_state_at_start_and_changes_during_lap():
     ]
 
 
-def test_expand_stints_tyre_life_convention():
-    stints = pd.DataFrame([
-        {"driver_number": 1, "stint_number": 1, "lap_start": 1, "lap_end": 3,
-         "compound": "SOFT", "tyre_age_at_start": 3},
-        {"driver_number": 1, "stint_number": 2, "lap_start": 4, "lap_end": None,
-         "compound": "HARD", "tyre_age_at_start": 0},
-    ])
-    out = expand_stints(stints, max_lap=6).set_index("LapNumber")
-    assert out.loc[1.0, "TyreLife"] == 4 and not out.loc[1.0, "FreshTyre"]
-    assert out.loc[3.0, "TyreLife"] == 6
-    assert out.loc[4.0, "TyreLife"] == 1 and out.loc[4.0, "FreshTyre"]
-    assert out.loc[6.0, "Compound"] == "HARD"  # open-ended final stint runs to max_lap
+def stint_records(*rows) -> pd.DataFrame:
+    cols = ["stint_number", "lap_start", "lap_end", "compound", "tyre_age_at_start"]
+    return pd.DataFrame([dict(zip(cols, r, strict=True), driver_number=1) for r in rows])
+
+
+def driver_laps(n: int, out_laps=()) -> pd.DataFrame:
+    return pd.DataFrame({"DriverNumber": "1", "LapNumber": np.arange(1, n + 1, dtype=float),
+                         "PitOutTime": [1.0 if lap in out_laps else np.nan
+                                        for lap in range(1, n + 1)]})
+
+
+def tyres(records, laps) -> pd.DataFrame:
+    return tyre_laps(records, laps).set_index("LapNumber")
+
+
+def test_tyre_life_convention_and_open_final_stint():
+    t = tyres(stint_records((1, 1, 3, "SOFT", 3), (2, 4, None, "HARD", 0)),
+              driver_laps(6, out_laps={4}))
+    assert t.loc[1.0, "TyreLife"] == 4 and not t.loc[1.0, "FreshTyre"]
+    assert t.loc[3.0, "TyreLife"] == 6
+    assert t.loc[4.0, "TyreLife"] == 1 and t.loc[4.0, "FreshTyre"]
+    assert t.loc[6.0, "Compound"] == "HARD"
+
+
+def test_stint_boundaries_follow_out_laps_not_records():
+    # 2025 Monaco-style records: new stint starts on the in-lap (22), out-lap is 23
+    t = tyres(stint_records((1, 1, 21, "MEDIUM", 0), (2, 22, 30, "HARD", 0)),
+              driver_laps(30, out_laps={23}))
+    assert t.loc[22.0, "Compound"] == "MEDIUM" and t.loc[22.0, "Stint"] == 1
+    assert t.loc[23.0, "Compound"] == "HARD" and t.loc[23.0, "TyreLife"] == 1
+
+
+def test_split_record_keeps_counting_tyre_age():
+    # 2025 Las Vegas-style: one HARD stint split into records starting 18 and 19
+    t = tyres(stint_records((1, 1, 17, "MEDIUM", 0), (2, 18, 18, "HARD", 0),
+                            (3, 19, 25, "HARD", 0)),
+              driver_laps(25, out_laps={18}))
+    assert t.loc[25.0, "TyreLife"] == 8 and t.loc[25.0, "Stint"] == 2
+
+
+def test_lap_one_artifact_record_is_absorbed():
+    # 2025 Spa-style: INTER record for lap 1 only, then "MEDIUM" from lap 2 until the stop
+    t = tyres(stint_records((1, 1, 1, "INTERMEDIATE", 1), (2, 2, 12, "MEDIUM", 1),
+                            (3, 13, 20, "MEDIUM", 1)),
+              driver_laps(20, out_laps={13}))
+    assert t.loc[12.0, "Compound"] == "INTERMEDIATE"
+    assert t.loc[13.0, "Compound"] == "MEDIUM"
+
+
+def test_records_contradicting_pit_stops_give_no_tyre_data():
+    # 2025 Miami-style: a HARD stint from lap 25 but no pit stop at all
+    t = tyres(stint_records((1, 1, 1, "MEDIUM", 22), (2, 25, 40, "HARD", 6)), driver_laps(40))
+    assert t.empty
+
+
+def test_drive_through_keeps_tyres():
+    t = tyres(stint_records((1, 1, 20, "HARD", 0)), driver_laps(20, out_laps={10}))
+    assert t.loc[10.0, "Stint"] == 1 and t.loc[10.0, "TyreLife"] == 10
 
 
 def test_quali_best_laps_skips_deleted_laps():

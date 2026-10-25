@@ -42,8 +42,21 @@ source .venv/Scripts/activate   # Windows Git Bash; use .venv\Scripts\activate i
 pip install -e "packages/strategist[dev]"
 ```
 
+Build the dataset (2021–2025; about 25 minutes on the first run, then served from the
+on-disk cache):
+
+```bash
+python -m strategist.data.ingest --config configs/data.yaml --wait-on-rate-limit
+python -m strategist.data.clean --config configs/data.yaml
+```
+
+This writes `data/processed/laps.parquet` (every lap, with features and an
+`exclude_reason`) and `data/processed/races.parquet`. See
+[docs/DESIGN.md §3](docs/DESIGN.md) for sources, cleaning rules and validation.
+
 ## Disclaimer
 
 Unofficial, non-commercial project. Not associated with Formula 1 companies. F1,
 FORMULA ONE and related marks are trademarks of Formula One Licensing B.V. Data via
-[FastF1](https://github.com/theOehrly/Fast-F1).
+[FastF1](https://github.com/theOehrly/Fast-F1), [OpenF1](https://openf1.org) and
+[Jolpica](https://github.com/jolpica/jolpica-f1).

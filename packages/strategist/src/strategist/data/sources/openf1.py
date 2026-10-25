@@ -4,7 +4,8 @@ OpenF1 serves the same F1 live-timing feed as FastF1 but in a different shape. T
 rebuilds FastF1-style laps from it:
 
 - lap end ``Time`` = ``date_start + lap_duration`` (falls back to the next lap's start)
-- tyre ``Stint``/``Compound``/``TyreLife``/``FreshTyre`` expanded from stints
+- tyre ``Stint``/``Compound``/``TyreLife``/``FreshTyre``: boundaries from pit out-laps, compound
+  and starting age from OpenF1 stint records (whose lap ranges are inconsistent between races)
 - ``PitInTime``/``PitOutTime`` from the pit endpoint and ``is_pit_out_lap``
 - ``TrackStatus`` (FastF1 codes) replayed from race-control messages
 - ``Position`` = order of crossing the line on each lap; weather joined at lap start
@@ -82,8 +83,9 @@ class OpenF1Client:
 class OpenF1Source:
     name = "openf1"
 
-    def __init__(self, cache_dir: str | Path):
+    def __init__(self, cache_dir: str | Path, jolpica_cache: str | Path):
         self.client = OpenF1Client(cache_dir)
+        self.jolpica_cache = jolpica_cache
         self._sessions: dict[int, pd.DataFrame] = {}
 
     def fetch(self, year: int, event: pd.Series) -> RaceData:
@@ -96,11 +98,11 @@ class OpenF1Source:
 
         origin = pd.Timestamp(session["date_start"])
         laps = build_laps(raw, origin)
-        results = jolpica.race_results(year, rnd)
+        results = jolpica.race_results(year, rnd, self.jolpica_cache)
         team_by_number = laps.drop_duplicates("DriverNumber").set_index("DriverNumber")["Team"]
         results["TeamName"] = results["DriverNumber"].map(team_by_number).fillna(results["TeamName"])
 
-        quali, quali_source = jolpica.quali_best(year, rnd), "jolpica"
+        quali, quali_source = jolpica.quali_best(year, rnd, self.jolpica_cache), "jolpica"
         if len(quali) < len(results) // 2:
             log.warning("%s R%02d: Jolpica has no qualifying times; using OpenF1 laps", year, rnd)
             quali, quali_source = self._quali_best(int(session["meeting_key"])), "openf1"
@@ -198,29 +200,67 @@ def lap_track_status(starts, ends, events: list[tuple[float, str]]) -> list[str]
     return out
 
 
-def expand_stints(stints: pd.DataFrame, max_lap: int) -> pd.DataFrame:
-    """One row per (driver, lap) with stint, compound and tyre age (FastF1 TyreLife convention:
-    a fresh tyre's first lap is 1)."""
-    rows = []
-    if stints.empty:
-        stints = pd.DataFrame(columns=["driver_number", "stint_number", "lap_start"])
-    for s in stints.sort_values(["driver_number", "stint_number"]).itertuples():
-        if pd.isna(s.lap_start):
+TYRE_COLUMNS = ["DriverNumber", "LapNumber", "Stint", "Compound", "TyreLife", "FreshTyre"]
+
+
+def match_stint_records(records: pd.DataFrame, starts: list[int]) -> list[int] | None:
+    """Index of the OpenF1 stint record supplying each pit-defined stint, or None if they conflict.
+
+    OpenF1 stint lap ranges are unreliable (some races start a stint on the in-lap, some on
+    the out-lap; records are occasionally split), so records only provide compound and
+    starting age. Equal counts pair in order; otherwise each stint takes the record starting
+    nearest to it, and a left-over record is only tolerated if it is within a lap of a pit
+    stop or keeps the same compound (a split record).
+    """
+    if records.empty:
+        return None
+    if len(records) == len(starts):
+        return list(range(len(records)))
+    rec_starts = records["lap_start"].to_numpy(float)
+    chosen = [int(np.argmin(np.abs(rec_starts - s))) for s in starts]
+    for i, rec in enumerate(records.itertuples()):
+        if i in chosen:
             continue
-        lap_end = int(s.lap_end) if pd.notna(s.lap_end) else max_lap
-        age0 = s.tyre_age_at_start
-        for lap in range(int(s.lap_start), lap_end + 1):
-            rows.append({
-                "DriverNumber": str(s.driver_number),
-                "LapNumber": float(lap),
-                "Stint": float(s.stint_number),
-                "Compound": s.compound,
-                "TyreLife": age0 + lap - s.lap_start + 1 if pd.notna(age0) else np.nan,
-                "FreshTyre": bool(age0 == 0) if pd.notna(age0) else None,
-            })
-    cols = ["DriverNumber", "LapNumber", "Stint", "Compound", "TyreLife", "FreshTyre"]
-    return (pd.DataFrame(rows, columns=cols)
-            .drop_duplicates(["DriverNumber", "LapNumber"], keep="last"))
+        k = max(int(np.searchsorted(starts, rec.lap_start, side="right")) - 1, 0)
+        near_stop = min(abs(rec.lap_start - s) for s in starts) <= 1
+        if not near_stop and rec.compound != records.iloc[chosen[k]].compound:
+            return None
+    return chosen
+
+
+def tyre_laps(stints: pd.DataFrame, laps: pd.DataFrame) -> pd.DataFrame:
+    """Per-lap stint, compound and tyre age, with stint boundaries anchored on pit out-laps.
+    FastF1 TyreLife convention: a fresh tyre's first lap is 1. Drivers whose stint records
+    contradict their pit stops get no tyre data (and are excluded downstream)."""
+    rows = []
+    for drv, g in laps.groupby("DriverNumber"):
+        last_lap = int(g["LapNumber"].max())
+        outs = g.loc[g["PitOutTime"].notna() & g["LapNumber"].gt(1), "LapNumber"].astype(int)
+        starts = [1, *sorted(set(outs))]
+        records = (stints[stints["driver_number"].astype(str) == drv]
+                   .dropna(subset=["lap_start"]).sort_values("stint_number"))
+        chosen = match_stint_records(records, starts)
+        if chosen is None:
+            log.warning("driver %s: stint records contradict pit stops; no tyre data", drv)
+            continue
+        ends = [*starts[1:], last_lap + 1]
+        stint_no, age0, first = 0, np.nan, 1
+        for k, (start, end) in enumerate(zip(starts, ends, strict=True)):
+            rec = records.iloc[chosen[k]]
+            if k > 0 and chosen[k] == chosen[k - 1]:
+                pass  # same tyres after the stop (drive-through/stop-go): age carries on
+            else:
+                stint_no, age0, first = stint_no + 1, rec.tyre_age_at_start, start
+            for lap in range(start, end):
+                rows.append({
+                    "DriverNumber": drv,
+                    "LapNumber": float(lap),
+                    "Stint": float(stint_no),
+                    "Compound": rec.compound,
+                    "TyreLife": age0 + lap - first + 1 if pd.notna(age0) else np.nan,
+                    "FreshTyre": bool(age0 == 0) if pd.notna(age0) else None,
+                })
+    return pd.DataFrame(rows, columns=TYRE_COLUMNS)
 
 
 def build_laps(raw: dict[str, pd.DataFrame], origin: pd.Timestamp) -> pd.DataFrame:
@@ -257,8 +297,7 @@ def build_laps(raw: dict[str, pd.DataFrame], origin: pd.Timestamp) -> pd.DataFra
     laps["Driver"] = laps["DriverNumber"].map(drivers["name_acronym"])
     laps["Team"] = laps["DriverNumber"].map(drivers["team_name"])
 
-    laps = laps.merge(expand_stints(raw["stints"], int(laps["LapNumber"].max())),
-                      on=["DriverNumber", "LapNumber"], how="left")
+    laps = laps.merge(tyre_laps(raw["stints"], laps), on=["DriverNumber", "LapNumber"], how="left")
     events = track_status_events(raw["race_control"], origin)
     laps["TrackStatus"] = lap_track_status(laps["LapStartTime"], laps["Time"], events)
     laps["Position"] = line_positions(laps)

@@ -30,6 +30,7 @@ circuit_aliases:
 paths:
   fastf1_cache: data/cache
   openf1_cache: data/cache/openf1
+  jolpica_cache: data/cache/jolpica
   raw: data/raw
   processed: data/processed
 

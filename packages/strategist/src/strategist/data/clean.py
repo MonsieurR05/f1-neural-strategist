@@ -26,7 +26,7 @@ WET_COMPOUNDS = {"INTERMEDIATE", "WET"}
 
 # Checked in this order; a lap gets the first reason that applies.
 EXCLUSION_ORDER = [
-    "wet_race", "no_time", "generated", "lap1", "pit_in", "pit_out",
+    "wet_race", "no_time", "generated", "lap1", "pit_in", "pit_out", "tyre_data",
     "neutralised", "non_slick", "rain", "damp", "inaccurate", "slow_outlier",
 ]
 
@@ -96,6 +96,21 @@ def damp_laps(laps: pd.DataFrame, window: int) -> pd.Series:
     return laps["lap_number"].isin(near)
 
 
+def unreliable_tyre_data(laps: pd.DataFrame) -> pd.Series:
+    """Laps whose tyre information can't be trusted: no compound, or the driver's stint changes
+    at a lap that isn't a pit out-lap. Tyres may legally change under a red flag, so stint
+    changes from one lap before to two laps after a red-flag lap are allowed."""
+    red_laps = laps.loc[laps["track_status"].fillna("").str.contains("5"), "lap_number"]
+    near_red = {n + d for n in red_laps.unique() for d in (-1, 0, 1, 2)}
+    ordered = laps.sort_values(["driver", "lap_number"])
+    prev_stint = ordered.groupby("driver")["stint"].shift()
+    change = ordered["stint"].notna() & prev_stint.notna() & ordered["stint"].ne(prev_stint)
+    unexplained = (change & ordered["pit_out_time_s"].isna()
+                   & ~ordered["lap_number"].isin(near_red))
+    bad_drivers = set(ordered.loc[unexplained, "driver"])
+    return laps["compound"].isna() | laps["driver"].isin(bad_drivers)
+
+
 def assign_exclusions(
     laps: pd.DataFrame,
     *,
@@ -113,6 +128,7 @@ def assign_exclusions(
         "lap1": laps["lap_number"].eq(1),
         "pit_in": laps["pit_in_time_s"].notna(),
         "pit_out": laps["pit_out_time_s"].notna(),
+        "tyre_data": unreliable_tyre_data(laps),
         "neutralised": status.apply(lambda s: any(code in s for code in neutralised_status)),
         "non_slick": ~laps["compound"].isin(SLICKS),
         "rain": laps["rainfall"].eq(True),

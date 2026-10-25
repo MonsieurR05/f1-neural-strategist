@@ -56,10 +56,11 @@ def timedeltas_to_seconds(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def make_source(name: str, cfg: dict) -> Source:
+    jolpica_cache = cfg["paths"]["jolpica_cache"]
     if name == "fastf1":
         from strategist.data.sources.fastf1_source import FastF1Source
-        return FastF1Source()
+        return FastF1Source(jolpica_cache=jolpica_cache)
     if name == "openf1":
         from strategist.data.sources.openf1 import OpenF1Source
-        return OpenF1Source(cache_dir=cfg["paths"]["openf1_cache"])
+        return OpenF1Source(cache_dir=cfg["paths"]["openf1_cache"], jolpica_cache=jolpica_cache)
     raise ValueError(f"unknown data source {name!r}")

@@ -97,17 +97,22 @@ Carlo: Spearman ρ, top-1 agreement, latency speed-up.
 
 ## 3. Data
 
-| Source | Use | Notes |
+| Source | Seasons | Use |
 |---|---|---|
-| **FastF1** (primary) | laps, sectors, compound, tyre life, stints, pit in/out, positions, track status, weather, car X/Y | timing data from 2018; results via Jolpica (Ergast successor) |
-| **OpenF1** | intervals, pit durations, race control | 2023+ only; later live mode |
+| **FastF1** (community mirror) | 2021–2022 | laps, sectors, compound, tyre life, stints, pit in/out, positions, track status, weather, car X/Y |
+| **OpenF1** | 2023–2025 | same live-timing feed, different shape; rebuilt into FastF1-style laps |
+| **Jolpica** (Ergast successor) | all | classification, grid, qualifying Q1–Q3 times |
 
 - **Scope:** dry races 2021–2025, all circuits, for lap-time training; Bahrain for
   simulation and UI in the MVP. 2026+ is a new regulation era — add as a separate
   era once it has enough data.
-- **Volume:** ~24k laps/season → ~90–110k usable laps after cleaning.
-- **Cleaning:** drop wet races, lap 1, in/out laps, SC/VSC laps (modelled
-  separately), laps flagged inaccurate.
+- **Volume (actual):** 114 races, 124.7k laps, **93.5k clean** — train 2021–23: 52.2k,
+  val 2024: 20.6k, test 2025: 20.7k. 15 races are wet and excluded.
+- **Cleaning:** nothing is deleted; each lap gets the first applicable `exclude_reason`:
+  `wet_race` (≥10% inter/wet laps or ≥25% rain laps), `no_time`, `generated`, `lap1`,
+  `pit_in`, `pit_out`, `tyre_data` (no compound, or a stint change not at a pit stop
+  outside red flags), `neutralised` (SC/VSC/red), `non_slick`, `rain`, `damp` (within 2
+  laps of anyone on inters), `inaccurate`, `slow_outlier` (>107% of race median).
 - **Hand-built table:** event → Pirelli compound mapping (SOFT/MEDIUM/HARD → C1–C5).
 - **Known confounders (documented, not hidden):** fuel load estimated; car pace
   shifts (2022 rules reset, upgrades) absorbed by team-season embeddings + quali
@@ -121,11 +126,24 @@ Carlo: Spearman ρ, top-1 agreement, latency speed-up.
   FastF1-style laps; track status replayed from race-control messages; line position
   derived from timing). Classification and qualifying from Jolpica. Both adapters write
   the same raw schema (`strategist.data.sources`), and `races.parquet` records the source.
-- **Validation of the OpenF1 adapter** (Bahrain 2023–2025): pit in-laps match stint
-  changes for every driver; fresh-stint `TyreLife` starts at 1 as in FastF1; rebuilt
-  SC/VSC laps match the real races; line order equals timing order. Official
+- **OpenF1 data issues found and handled:**
+  - stint lap ranges use different conventions between races (new stint on the in-lap
+    in some, the out-lap in others), are sometimes split, and occasionally mislabel
+    compounds (2025 Spa: inter laps labelled MEDIUM). Stint boundaries are therefore
+    anchored on pit out-laps from timing; records only supply compound and starting age.
+    This cut inconsistent driver-races from 177/1394 to 8.
+  - the position feed lags the line crossing → position derived from timing order.
+  - Jolpica lacks Q times for some events (2025 Miami) → best OpenF1 qualifying lap,
+    skipping laps race control deleted; `quali_source` is recorded in meta.
+- **Validation (all 114 races):** fresh-stint `TyreLife` starts at 1 in 99.4% (FastF1)
+  and 100% (OpenF1) of stints; rebuilt SC/VSC laps match the real races; line order
+  equals timing order in ≥99.9% of race-laps; Jolpica and lap-based qualifying times
+  agree for 343/352 drivers (the rest are laps the stewards deleted). Official
   classification differs only by post-race penalties/DSQs, so **simulator backtests
   compare against road order at the line**, not the official classification.
+- **API etiquette:** OpenF1 throttled to its free tier (30/min); FastF1's 500 calls/h
+  budget is respected (`--wait-on-rate-limit`); OpenF1 and Jolpica responses are cached
+  on disk, so rebuilding the dataset makes no network requests.
 
 **Why Bahrain:** always dry (night race), high degradation, varied strategies
 (1–3 stops), overtaking is possible, on the calendar every season.
