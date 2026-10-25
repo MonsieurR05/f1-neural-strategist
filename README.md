@@ -4,12 +4,13 @@ An interactive Formula 1 race-strategy simulator and decision-support tool. A
 neural lap-time model, trained on real timing data, drives a Monte Carlo race
 simulator that evaluates pit strategies and explains why one beats another.
 
-> Status: early development. Phases 0–3 are complete: data pipeline, exploration, an
+> Status: early development. Phases 0–4 are complete: data pipeline, exploration, an
 > evaluation harness with three non-neural baselines, the structured probabilistic
 > lap-time network ([validation report](docs/reports/lap_time_models_val.md),
-> [model card](docs/MODEL_CARD.md)), and the Monte Carlo race simulator
-> ([backtest](docs/reports/sim_backtest_val.md)). Next is phase 4, the strategy optimiser
-> and API. See [docs/DESIGN.md](docs/DESIGN.md) for the full design.
+> [model card](docs/MODEL_CARD.md)), the Monte Carlo race simulator
+> ([backtest](docs/reports/sim_backtest_val.md)), and the strategy optimiser behind a
+> FastAPI service ([API](services/api/README.md)). Next is phase 5, the web frontend. See
+> [docs/DESIGN.md](docs/DESIGN.md) for the full design.
 
 **Lap-time forecasting on an unseen season (2024 validation, 19,969 laps):**
 
@@ -101,6 +102,13 @@ parameters under `artifacts/models/` on first run; writes `docs/reports/sim_back
 
 ```bash
 python -m strategist.sim.backtest --config configs/sim.yaml
+```
+
+Serve the strategy API (races, simulation, optimisation; docs at `/docs`):
+
+```bash
+pip install -e services/api[dev]
+uvicorn app.main:app --app-dir services/api --reload
 ```
 
 ## Disclaimer

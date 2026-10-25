@@ -1,6 +1,6 @@
 # Race simulator backtest: Sakhir
 
-_Generated 2026-10-25 19:31 UTC from commit `b7d4713` by `python -m strategist.sim.backtest`. Do not edit by hand._
+_Generated 2026-10-25 19:42 UTC from commit `e504c2c` by `python -m strategist.sim.backtest`. Do not edit by hand._
 
 **Setup.** Each race is replayed from the actual order and gaps after lap 1 with the strategies, safety-car/VSC laps and retirements that actually happened, 500 Monte Carlo runs. Lap-time network and simulator parameters are fitted on the training seasons only; training-season races are in-sample, the evaluation season (val) is held out. Actual order is road order at the line (official results include post-race penalties).
 
@@ -10,11 +10,11 @@ _Generated 2026-10-25 19:31 UTC from commit `b7d4713` by `python -m strategist.s
 
 | role | model | pos_mae | spearman | coverage_80 | p_actual_winner | gap_mae_s | lap_pos_mae |
 |---|---|---|---|---|---|---|---|
-| held out | simulator | 2.125 | 0.899 | 0.850 | 0.504 | 14.891 | 1.754 |
+| held out | simulator | 2.100 | 0.899 | 0.850 | 0.520 | 14.376 | 1.712 |
 | held out | no interactions | 2.350 | 0.899 | 0.900 | 0.478 | 15.361 | 1.780 |
 | held out | lap-1 order | 2.300 | 0.856 | – | – | – | – |
 | held out | grid order | 2.300 | 0.886 | – | – | – | – |
-| in-sample | simulator | 1.468 | 0.897 | 0.901 | 0.551 | 21.332 | 1.706 |
+| in-sample | simulator | 1.458 | 0.891 | 0.922 | 0.555 | 20.696 | 1.709 |
 | in-sample | no interactions | 1.498 | 0.885 | 0.901 | 0.501 | 21.227 | 1.773 |
 | in-sample | lap-1 order | 2.201 | 0.786 | – | – | – | – |
 | in-sample | grid order | 2.027 | 0.835 | – | – | – | – |
@@ -23,10 +23,10 @@ _Generated 2026-10-25 19:31 UTC from commit `b7d4713` by `python -m strategist.s
 
 | race | role | pos_mae | spearman | coverage_80 | p_actual_winner | gap_mae_s | lap_pos_mae |
 |---|---|---|---|---|---|---|---|
-| 2021_01 | in-sample | 1.375 | 0.941 | 0.938 | 0.096 | 27.125 | 1.727 |
-| 2022_01 | in-sample | 1.500 | 0.877 | 0.882 | 0.882 | 11.552 | 1.795 |
-| 2023_01 | in-sample | 1.529 | 0.873 | 0.882 | 0.674 | 25.318 | 1.597 |
-| 2024_01 | held out | 2.125 | 0.899 | 0.850 | 0.504 | 14.891 | 1.754 |
+| 2021_01 | in-sample | 1.375 | 0.935 | 1.000 | 0.112 | 26.043 | 1.703 |
+| 2022_01 | in-sample | 1.412 | 0.875 | 0.882 | 0.886 | 11.505 | 1.794 |
+| 2023_01 | in-sample | 1.588 | 0.863 | 0.882 | 0.666 | 24.541 | 1.630 |
+| 2024_01 | held out | 2.100 | 0.899 | 0.850 | 0.520 | 14.376 | 1.712 |
 
 ## Held-out race: Bahrain Grand Prix 2024
 
@@ -34,26 +34,26 @@ _Generated 2026-10-25 19:31 UTC from commit `b7d4713` by `python -m strategist.s
 
 | driver | actual_pos | median_pos | p10_pos | p90_pos | p_win | p_podium | actual_gap_s | median_gap_s |
 |---|---|---|---|---|---|---|---|---|
-| VER | 1 | 1.00 | 1.00 | 4.00 | 0.50 | 0.87 | 0.00 | 0.00 |
-| PER | 2 | 6.00 | 3.00 | 10.00 | 0.02 | 0.18 | 22.46 | 54.28 |
-| SAI | 3 | 5.00 | 2.00 | 8.00 | 0.03 | 0.29 | 24.98 | 49.09 |
-| LEC | 4 | 2.00 | 1.00 | 5.00 | 0.34 | 0.80 | 39.60 | 14.68 |
-| RUS | 5 | 4.00 | 2.00 | 7.00 | 0.07 | 0.43 | 47.02 | 41.82 |
-| NOR | 6 | 7.00 | 3.00 | 11.00 | 0.01 | 0.12 | 48.38 | 61.85 |
-| HAM | 7 | 8.00 | 4.00 | 12.00 | 0.00 | 0.06 | 50.26 | 70.88 |
-| PIA | 8 | 8.00 | 4.00 | 11.10 | 0.01 | 0.07 | 56.05 | 67.05 |
-| ALO | 9 | 6.50 | 3.00 | 10.00 | 0.01 | 0.15 | 74.80 | 60.41 |
-| STR | 10 | 13.00 | 8.00 | 17.00 | 0.00 | 0.01 | 93.15 | 96.54 |
-| ZHO | 11 | 16.00 | 12.00 | 19.00 | 0.00 | 0.00 | – | 113.13 |
-| MAG | 12 | 15.00 | 10.00 | 18.00 | 0.00 | 0.00 | – | 105.23 |
-| RIC | 13 | 15.00 | 11.00 | 18.00 | 0.00 | 0.00 | – | 108.83 |
-| TSU | 14 | 11.00 | 7.00 | 15.00 | 0.00 | 0.00 | – | 88.41 |
-| ALB | 15 | 12.00 | 9.00 | 17.00 | 0.00 | 0.01 | – | 93.06 |
-| HUL | 16 | 11.00 | 6.90 | 15.00 | 0.00 | 0.01 | – | 84.94 |
-| OCO | 17 | 16.00 | 12.00 | 19.00 | 0.00 | 0.00 | – | 116.35 |
-| GAS | 18 | 19.00 | 16.00 | 20.00 | 0.00 | 0.00 | – | 136.30 |
-| BOT | 19 | 17.00 | 13.00 | 19.00 | 0.00 | 0.00 | – | 117.89 |
-| SAR | 20 | 19.00 | 15.00 | 20.00 | 0.00 | 0.00 | – | 129.87 |
+| VER | 1 | 1.00 | 1.00 | 4.00 | 0.52 | 0.88 | 0.00 | 0.00 |
+| PER | 2 | 6.00 | 3.00 | 10.00 | 0.01 | 0.20 | 22.46 | 56.09 |
+| SAI | 3 | 5.00 | 2.00 | 9.00 | 0.02 | 0.27 | 24.98 | 47.79 |
+| LEC | 4 | 2.00 | 1.00 | 5.00 | 0.35 | 0.78 | 39.60 | 15.76 |
+| RUS | 5 | 4.00 | 2.00 | 8.00 | 0.08 | 0.44 | 47.02 | 42.84 |
+| NOR | 6 | 6.50 | 3.00 | 10.00 | 0.01 | 0.12 | 48.38 | 60.51 |
+| HAM | 7 | 8.00 | 4.00 | 12.00 | 0.00 | 0.05 | 50.26 | 68.93 |
+| PIA | 8 | 8.00 | 4.00 | 12.00 | 0.01 | 0.06 | 56.05 | 65.97 |
+| ALO | 9 | 6.00 | 3.00 | 11.00 | 0.01 | 0.16 | 74.80 | 58.11 |
+| STR | 10 | 13.00 | 8.00 | 17.00 | 0.00 | 0.00 | 93.15 | 95.05 |
+| ZHO | 11 | 16.00 | 12.00 | 19.00 | 0.00 | 0.00 | – | 113.97 |
+| MAG | 12 | 14.00 | 10.00 | 18.00 | 0.00 | 0.00 | – | 104.89 |
+| RIC | 13 | 15.00 | 11.00 | 19.00 | 0.00 | 0.00 | – | 109.25 |
+| TSU | 14 | 11.00 | 7.00 | 16.00 | 0.00 | 0.01 | – | 86.29 |
+| ALB | 15 | 12.50 | 8.00 | 17.00 | 0.00 | 0.01 | – | 94.80 |
+| HUL | 16 | 11.00 | 6.00 | 15.00 | 0.00 | 0.02 | – | 83.88 |
+| OCO | 17 | 16.00 | 12.00 | 20.00 | 0.00 | 0.00 | – | 116.42 |
+| GAS | 18 | 19.00 | 16.00 | 20.00 | 0.00 | 0.00 | – | 135.80 |
+| BOT | 19 | 17.00 | 12.00 | 19.00 | 0.00 | 0.00 | – | 118.92 |
+| SAR | 20 | 18.00 | 15.00 | 20.00 | 0.00 | 0.00 | – | 129.82 |
 
 ## Calibrated simulator parameters (training seasons)
 

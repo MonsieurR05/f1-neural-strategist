@@ -312,10 +312,11 @@ class LapTimeNet:
     def predict(self, df: pd.DataFrame) -> pd.Series:
         return self.predict_dist(df)[0]
 
-    def predict_batch(self, b: Batch) -> tuple[torch.Tensor, torch.Tensor]:
-        """Mixture mean and σ (percent of q_s) for a pre-built batch: the simulator's fast path."""
+    def predict_batch(self, b: Batch, members: int | None = None) -> tuple[torch.Tensor, torch.Tensor]:
+        """Mixture mean and σ (percent of q_s) for a pre-built batch: the simulator's fast path.
+        ``members`` limits the ensemble (cheaper screening)."""
         with torch.no_grad():
-            outs = [m(b) for m in self.modules]
+            outs = [m(b) for m in self.modules[:members]]
         mus = torch.stack([o["mu"] for o in outs])
         var = torch.stack([o["sigma"] ** 2 for o in outs])
         mu = mus.mean(0)

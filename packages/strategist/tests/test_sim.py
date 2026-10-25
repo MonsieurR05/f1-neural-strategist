@@ -23,7 +23,7 @@ class StubNet:
         ctx[:, 0] = torch.tensor(df["quali_gap_pct"].to_numpy(), dtype=torch.float32)
         return torch.zeros(len(df), dtype=torch.long), ctx
 
-    def predict_batch(self, b):
+    def predict_batch(self, b, members=None):
         mu = 5.0 + b.context[:, 0] + self.deg * b.tyre_life
         return mu, torch.full_like(mu, self.sigma_pct)
 
@@ -144,6 +144,36 @@ def test_lap_status_follows_the_leader_not_lapped_cars():
                      "track_status": "4" if lap >= 2 else "1"})
     status = lap_status(pd.DataFrame(rows)).droplevel(0)
     assert status.to_dict() == {1: "GREEN", 2: "GREEN", 3: "GREEN", 4: "SC", 5: "SC"}
+
+
+def test_variants_share_random_numbers():
+    cars = [car("A", 0.0), car("B", 0.2)]
+    s = setup(cars, [0, 3], laps=20)
+    one = Strategy([Stint("MEDIUM", 8), Stint("HARD", 99)])
+    res = Simulator(StubNet(sigma_pct=0.5), params(driver_var_share=0.3), runs=25,
+                    seed=4).run(s, target="B", variants=[one, one])
+    final = res.by_variant(res.times[-1])
+    assert res.variants == 2 and res.runs_per_variant == 25
+    assert np.array_equal(final[0], final[1])  # same strategy, same luck → identical
+
+
+def test_variant_with_extra_stop_loses_the_pit_loss():
+    cars = [car("A", 0.0), car("B", 0.0)]
+    s = setup(cars, [0, 100], laps=20)
+    no_stop = Strategy([Stint("MEDIUM", 99)])
+    one_stop = Strategy([Stint("MEDIUM", 10), Stint("MEDIUM", 99)])
+    res = Simulator(StubNet(), params(), runs=5, record_laps=False).run(
+        s, target="B", variants=[no_stop, one_stop])
+    b = res.by_variant(res.times[-1][:, 1])
+    assert np.allclose(b[1] - b[0], 20.0, atol=1e-2)
+    assert res.times.shape[0] == 1  # final-only recording
+
+
+def test_held_time_is_recorded():
+    s = setup([car("A", 1.0), car("B", 0.0)], [0.0, 0.5])
+    res = Simulator(StubNet(), params(), runs=5).run(s)
+    held = res.finish_table().set_index("driver")["mean_held_s"]
+    assert held["B"] > 5.0 and held["A"] == 0.0
 
 
 def test_finish_table_columns():
