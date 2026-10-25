@@ -57,6 +57,28 @@ def test_full_prediction_is_non_decreasing_in_tyre_age():
     assert torch.all(mu[1:] - mu[:-1] >= -1e-5)
 
 
+def test_softer_compounds_are_faster_fresh_and_wear_more_for_any_weights():
+    torch.manual_seed(5)
+    module = LapNetModule(n_circuits=5)
+    for p in module.parameters():
+        torch.nn.init.normal_(p, std=1.0)
+    ages = torch.arange(0, 60, dtype=torch.float32)
+    for circuit in range(5):
+        for fresh in (0.0, 1.0):
+            base = random_batch(1, torch.tensor([0.0]))
+            mus = {}
+            for k in range(3):  # SOFT, MEDIUM, HARD
+                b = Batch(**{n: (v.repeat(len(ages)) if v.dim() == 1 else v.repeat(len(ages), 1))
+                             for n, v in base.__dict__.items()})
+                b.tyre_life, b.circuit = ages, torch.full((len(ages),), circuit)
+                b.compound, b.fresh = torch.full((len(ages),), k), torch.full((len(ages),), fresh)
+                out = module(b)
+                mus[k] = (out["offset"], out["deg"])
+            # fresh pace: soft ≤ medium ≤ hard; wear: soft ≥ medium ≥ hard at every age
+            assert torch.all(mus[0][0] <= mus[1][0] + 1e-5) and torch.all(mus[1][0] <= mus[2][0] + 1e-5)
+            assert torch.all(mus[0][1] >= mus[1][1] - 1e-5) and torch.all(mus[1][1] >= mus[2][1] - 1e-5)
+
+
 def test_sigma_is_positive_and_floored():
     module = LapNetModule(n_circuits=5)
     out = module(random_batch(64, torch.rand(64) * 40))

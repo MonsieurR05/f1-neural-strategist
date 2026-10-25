@@ -4,13 +4,23 @@ The target is the lap time in percent above the driver's qualifying lap,
 ``y = 100 · (lap_time / q_s − 1)``, decomposed into physically meaningful terms:
 
     y = base(circuit, quali pace, grid, race distance)
-      + conditions(track temp, compound)                       (shared by all circuits)
+      + conditions(track temp)                                 (shared by all circuits)
       + fuel_rate(circuit) · laps_remaining                    (rate ≥ 0)
-      + offset(compound, circuit, fresh)
-      + deg(tyre_age | compound, circuit, fresh)               (non-decreasing, convex in age)
+      + offset(compound | circuit, fresh)                      (soft ≤ medium ≤ hard)
+      + deg(tyre_age | compound, circuit, fresh)               (non-decreasing, convex in age;
+                                                                soft ≥ medium ≥ hard at every age)
       + traffic(gap ahead, leader, circuit)
-      + interaction(everything except tyre age and temp)       (bounded to ±0.5 %)
+      + interaction(everything except tyre age, temp, compound) (bounded to ±0.5 %)
       + ε,  ε ~ N(0, σ(context)²)
+
+Hardness ordering: within any race the three nominated compounds are ordered (soft is the
+softest), even though the labels map to different Pirelli compounds (C1–C6) between events
+and seasons. So, for every circuit and tyre state, a softer compound is at least as fast when
+fresh and degrades at least as much at every age. Built by construction (hard is the base;
+medium and soft add non-negative steps) and kept intact by leaving the compound out of the
+temperature and interaction terms. Without it the network rated the Bahrain medium both
+faster and longer-lasting than the hard (2021's medium was a softer compound than 2022's),
+and the optimiser recommended mediums for everyone.
 
 Identifiability rule: effects measurable *within* a race (fuel, tyre wear, traffic) may vary
 by circuit; race-level conditions (track temperature) enter only through terms shared across
@@ -93,21 +103,22 @@ class LapNetModule(nn.Module):
         self.circuit_emb = nn.Embedding(n_circuits, emb_dim)
         self.compound_emb = nn.Embedding(len(COMPOUNDS), compound_dim)
         nr = len(RACE_CONTEXT)
-        tyre_in = emb_dim + compound_dim + 1  # + fresh
+        nb = 1 + len(KNOTS)
+        tyre_in = emb_dim + 1  # circuit + fresh; heads output all three compounds at once
 
         self.base = mlp(emb_dim + nr, hidden, 1)
-        self.conditions = mlp(compound_dim + 1, hidden // 2, 1)  # no circuit input, by design
+        self.conditions = mlp(1, hidden // 2, 1)  # temperature only: no circuit, no compound
         self.fuel = nn.Linear(emb_dim, 1)
-        self.offset = mlp(tyre_in, hidden, 1)
-        self.deg = mlp(tyre_in, hidden, 1 + len(KNOTS))
+        self.offset = mlp(tyre_in, hidden, 3)         # hard level, hard→medium, medium→soft steps
+        self.deg = mlp(tyre_in, hidden, 3 * nb)       # hard weights, medium and soft increments
         self.traffic = mlp(emb_dim + 3, hidden, 1)
-        self.interaction = mlp(emb_dim + compound_dim + nr + 4, hidden, 1) if interaction else None
+        self.interaction = mlp(emb_dim + nr + 4, hidden, 1) if interaction else None
         self.sigma = mlp(emb_dim + compound_dim + 6, hidden, 1)
 
         with torch.no_grad():
             self.base[-1].bias.fill_(base_init)
             self.fuel.bias.fill_(np.log(np.expm1(0.8)))   # ≈0.08 %/lap ≈ 0.07 s/lap at 90 s
-            self.deg[-1].bias.fill_(-1.0)
+            self.deg[-1].bias.copy_(torch.tensor([-1.0] * nb + [-2.0] * (2 * nb)))
             if self.interaction is not None:
                 self.interaction[-1].weight.mul_(0.1)
                 self.interaction[-1].bias.zero_()
@@ -117,23 +128,38 @@ class LapNetModule(nn.Module):
         hinges = [self.tau * F.softplus((age - k) / self.tau) for k in KNOTS]
         return torch.stack([age, *hinges], dim=-1) / 10.0
 
+    def tyre_terms(self, ec: torch.Tensor, fresh: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Fresh-tyre offsets [N, 3] and degradation weights [N, 3, basis], in COMPOUNDS order
+        (soft, medium, hard), ordered by hardness by construction."""
+        ctx = torch.cat([ec, fresh.unsqueeze(-1)], dim=-1)
+        o = self.offset(ctx)
+        hard = o[:, 0]
+        medium = hard - F.softplus(o[:, 1])
+        soft = medium - F.softplus(o[:, 2])
+        w = self.deg(ctx).view(len(ec), 3, -1)
+        w_hard = F.softplus(w[:, 0])
+        w_medium = w_hard + F.softplus(w[:, 1])
+        w_soft = w_medium + F.softplus(w[:, 2])
+        return torch.stack([soft, medium, hard], 1), torch.stack([w_soft, w_medium, w_hard], 1)
+
     def forward(self, b: Batch) -> dict[str, torch.Tensor]:
         ec, ek = self.circuit_emb(b.circuit), self.compound_emb(b.compound)
         temp = b.context[:, TEMP].unsqueeze(-1)
         race_ctx = b.context[:, RACE_CONTEXT]
-        tyre_ctx = torch.cat([ec, ek, b.fresh.unsqueeze(-1)], dim=-1)
         near = torch.exp(-b.gap).unsqueeze(-1)
         leader = b.leader.unsqueeze(-1)
+        rows = torch.arange(len(ec))
 
         base = self.base(torch.cat([ec, race_ctx], dim=-1)).squeeze(-1)
-        conditions = self.conditions(torch.cat([ek, temp], dim=-1)).squeeze(-1)
+        conditions = self.conditions(temp).squeeze(-1)
         fuel = F.softplus(self.fuel(ec)).squeeze(-1) * b.laps_remaining / 10.0
-        offset = self.offset(tyre_ctx).squeeze(-1)
-        deg = (F.softplus(self.deg(tyre_ctx)) * self.basis(b.tyre_life)).sum(-1)
+        offsets, weights = self.tyre_terms(ec, b.fresh)
+        offset = offsets[rows, b.compound]
+        deg = (weights[rows, b.compound] * self.basis(b.tyre_life)).sum(-1)
         traffic = self.traffic(torch.cat([ec, near, (b.gap / 10).unsqueeze(-1), leader],
                                          dim=-1)).squeeze(-1)
-        if self.interaction is not None:  # no tyre age (monotonicity) and no temp (identifiability)
-            x = torch.cat([ec, ek, race_ctx, b.fuel_frac.unsqueeze(-1), near, leader,
+        if self.interaction is not None:  # no tyre age or compound (orderings), no temp (identifiability)
+            x = torch.cat([ec, race_ctx, b.fuel_frac.unsqueeze(-1), near, leader,
                            b.fresh.unsqueeze(-1)], dim=-1)
             interaction = INTERACTION_BOUND * torch.tanh(self.interaction(x).squeeze(-1))
         else:

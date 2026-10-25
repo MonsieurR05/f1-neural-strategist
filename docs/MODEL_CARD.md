@@ -29,10 +29,10 @@ Output: mean and standard deviation of the lap time in seconds (Gaussian).
 
 Additive terms in percent of the qualifying lap, each a small MLP over the inputs it may use:
 
-    base(circuit, quali pace, grid, race distance) + conditions(track temp, compound)
-    + fuel_rate(circuit)·laps_remaining + offset(compound, circuit, fresh)
+    base(circuit, quali pace, grid, race distance) + conditions(track temp)
+    + fuel_rate(circuit)·laps_remaining + offset(compound | circuit, fresh)
     + deg(tyre age | compound, circuit, fresh) + traffic(gap, leader, circuit)
-    + interaction(all inputs except tyre age and temperature, bounded ±0.5 %)
+    + interaction(all inputs except tyre age, temperature and compound, bounded ±0.5 %)
 
 Design guarantees, enforced by construction and unit-tested with random weights:
 
@@ -41,6 +41,10 @@ Design guarantees, enforced by construction and unit-tested with random weights:
   a "cliff"), and the interaction term never sees tyre age. Counterfactual long stints
   therefore stay physically plausible.
 - **Fuel effect ≥ 0** and linear in laps remaining, per circuit.
+- **Hardness ordering:** at every circuit and tyre state, soft ≤ medium ≤ hard in fresh-tyre
+  pace and soft ≥ medium ≥ hard in degradation at every age (hard is the base; medium and soft
+  add non-negative steps; temperature and interaction terms don't see the compound). Within
+  a race the three nominated compounds are always ordered, whatever Pirelli compounds they are.
 - **Identifiability rule:** race-level conditions (temperature) only enter terms shared by
   all circuits. With one to three races per circuit, a circuit-specific temperature effect
   would be confounded with everything else that differed between those races.
@@ -64,18 +68,25 @@ a Gaussian mixture.
 
 | Metric | lap_net | LightGBM | Linear deg (analyst) |
 |---|---|---|---|
-| Lap-time MAE | **0.864 s** | 0.927 s | 0.922 s |
-| Within-race MAE (strategy-relevant) | 0.527 s | **0.521 s** | 0.533 s |
-| Gaussian NLL | **1.607** | 1.850 | 1.775 |
-| 90% interval coverage | 0.919 | 0.889 | 0.891 |
-| Bahrain lap-time MAE / within-race MAE | **0.385 / 0.320 s** | 0.419 / 0.369 s | 0.454 / 0.366 s |
-| Bahrain stint-slope skill | **+0.32** | −0.19 | +0.12 |
+| Lap-time MAE | **0.888 s** | 0.927 s | 0.922 s |
+| Within-race MAE (strategy-relevant) | 0.537 s | **0.521 s** | 0.533 s |
+| Gaussian NLL | **1.670** | 1.850 | 1.775 |
+| 90% interval coverage | 0.916 | 0.889 | 0.891 |
+| Bahrain lap-time MAE / within-race MAE | 0.431 / **0.330 s** | **0.419** / 0.369 s | 0.454 / 0.366 s |
+| Bahrain stint-slope skill | **+0.29** | −0.19 | +0.12 |
 
-Against LightGBM, race-level paired bootstrap (95%): MAE −0.063 s [−0.133, −0.007] (better),
-within-race MAE +0.005 s [−0.020, +0.033] (tie), NLL −0.243 [−0.721, +0.066] (likely better).
+Against LightGBM, race-level paired bootstrap (95%): MAE −0.039 s [−0.100, +0.008],
+within-race MAE +0.016 s [−0.021, +0.072], NLL −0.181 [−0.681, +0.138]: within race-to-race
+noise for a single season.
 
-Learned Bahrain behaviour (median conditions): fuel 0.074 s per lap of fuel; degradation at 20
-laps soft 2.6 s, medium 1.5 s, hard 1.7 s, steepening with age.
+Before the hardness-ordering constraint the network scored MAE 0.864 s / within-race 0.527 s /
+NLL 1.607 (significantly better than LightGBM on MAE), but it had learned that the Bahrain
+medium was both faster and longer-lasting than the hard. The constraint trades that fit for
+physical consistency.
+
+Learned Bahrain behaviour (median conditions): fresh-tyre pace soft −0.72 %, medium −0.58 %,
+hard −0.27 % of the qualifying lap; degradation after 25 laps soft 5.1 s, medium 2.7 s,
+hard 2.4 s, steepening with age.
 
 ## Limitations
 
@@ -94,7 +105,12 @@ laps soft 2.6 s, medium 1.5 s, hard 1.7 s, steepening with age.
 - **Dry conditions only.** Wet races and laps are excluded from training.
 - **Associational:** observed laps reflect teams' strategy choices and tyre management, and
   fuel load is a proxy. Effects are estimates, not measured physics.
-- **Compound labels** (soft/medium/hard) map to different Pirelli compounds between events;
-  a C1–C5 mapping is not yet used.
+- **Compound identity across races (most important for strategy):** soft/medium/hard map to
+  different Pirelli compounds (C1–C6) between events and seasons, and the model doesn't know
+  which. The ordering constraint makes each race internally consistent, but a label still
+  blends different rubber: "Bahrain soft" mixes 2021's C4 with 2022–24's C3, so the model is
+  too pessimistic about the 2024 soft and the optimiser over-recommends the medium. Fix: a
+  per-race C-number table (Pirelli nominations; no public dataset for 2021–25, so it has to
+  be compiled from race previews).
 - One validation-driven change was made (the identifiability rule above); everything else was
   chosen on the inner split. The sealed 2025 test season will give the unbiased estimate.

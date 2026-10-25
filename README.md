@@ -21,19 +21,28 @@ simulator that evaluates pit strategies and explains why one beats another.
 | Circuit pace ratio | 1.166 s | 0.852 s | 1.994 |
 | Fuel-corrected linear degradation | 0.922 s | 0.533 s | 1.775 |
 | LightGBM | 0.927 s | **0.521 s** | 1.850 |
-| **Structured network (ensemble of 5)** | **0.864 s** | 0.527 s | **1.607** |
+| **Structured network (ensemble of 5)** | **0.888 s** | 0.537 s | **1.670** |
 
-The network is significantly more accurate than LightGBM on absolute lap time (−0.063 s,
-95% race-bootstrap interval −0.133 to −0.007), ties it on within-race error, gives the best
-calibrated uncertainty, and is best on every metric at Bahrain, the MVP circuit. Its
-degradation curves can never decrease with tyre age, so strategy counterfactuals stay
-physically plausible.
+The network has the lowest lap-time error and the best-calibrated uncertainty, but against
+LightGBM the differences are within race-to-race noise for one season (MAE −0.039 s, 95%
+race-bootstrap interval −0.100 to +0.008; within-race error a tie). At Bahrain, the MVP
+circuit, it has the lowest within-race error (0.330 s) and the only clearly positive
+stint-slope skill. Unlike the baselines it is physically constrained: predictions never get
+faster as tyres age, and within a race a softer compound is always quicker when fresh and
+wears more. That constraint cost a little accuracy (MAE 0.864 → 0.888 s): the
+unconstrained network was fitting the inconsistency of compound labels across seasons.
 
 **Race simulator backtest (2024 Bahrain GP, held out, 500 runs):** replayed from the order
 after lap 1 with the strategies actually used, the simulator's median finishing positions
-are off by 2.10 places on average (frozen lap-1 order 2.30, grid order 2.30, simulator
-without traffic and overtaking 2.35), with rank correlation 0.90 and well-calibrated 80%
-intervals (85% coverage).
+are off by 2.20 places on average (frozen lap-1 order 2.30, grid order 2.30, simulator
+without traffic and overtaking 2.28), with rank correlation 0.87 and 95% of drivers inside
+the simulated 80% range (somewhat too wide).
+
+> **Known limitation:** soft/medium/hard mean different Pirelli compounds (C1–C6) at
+> different races and seasons, and the model doesn't know which. At Bahrain the 2021 soft
+> was the C4, the 2024 soft the C3, so the model is too pessimistic about the 2024 soft and
+> the optimiser over-recommends the medium. Every optimiser response carries this caveat;
+> the fix is a per-race C-number table.
 
 ![Simulated vs actual finishing positions, 2024 Bahrain GP](docs/figures/sim_backtest_2024_01.png)
 

@@ -22,7 +22,7 @@ MODEL_CAVEATS = [
     "Simulated outcomes are counterfactual estimates, not predictions of what would have happened.",
     "Compound labels (soft/medium/hard) map to different Pirelli compounds between events and "
     "seasons; the lap-time model does not yet use the C1–C5 mapping, so compound comparisons "
-    "can be biased (e.g. it rates the medium unusually well at Bahrain).",
+    "can be biased (e.g. it is too pessimistic about the 2024 Bahrain soft, so it over-recommends the medium).",
     "Other drivers keep their strategies; they do not react to the optimised driver.",
     "Dry races only. Tyre wear beyond the ages observed at the circuit is extrapolated.",
 ]
