@@ -18,6 +18,7 @@ The run is idempotent: complete races are skipped, so an interrupted run can be 
 import argparse
 import json
 import logging
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -26,9 +27,12 @@ import pandas as pd
 from fastf1.exceptions import RateLimitExceededError
 
 from strategist.config import load_config
-from strategist.data.sources import RaceData, TimingUnavailableError, make_source
+from strategist.data.sources import RaceData, Source, TimingUnavailableError, make_source
 
 log = logging.getLogger(__name__)
+
+RATE_LIMIT_WAIT_S = 61 * 60
+RATE_LIMIT_RETRIES = 3
 
 
 def race_dir(raw_root: Path, year: int, round_number: int) -> Path:
@@ -45,6 +49,20 @@ def season_rounds(year: int, event_filter: str | None = None) -> list[pd.Series]
             if any(needle in str(e[c]).lower() for c in ("EventName", "Location", "Country"))
         ]
     return events
+
+
+def fetch_respecting_limits(source: Source, year: int, event: pd.Series, wait: bool) -> RaceData:
+    """FastF1 counts its own calls (500/h overall, 200/h to Jolpica) and raises when over.
+    With ``wait``, sleep until the hourly window has cleared and try the race again."""
+    for attempt in range(RATE_LIMIT_RETRIES + 1):
+        try:
+            return source.fetch(year, event)
+        except RateLimitExceededError as exc:
+            if not wait or attempt == RATE_LIMIT_RETRIES:
+                raise
+            log.warning("rate limit hit (%s); waiting %d min", exc, RATE_LIMIT_WAIT_S // 60)
+            time.sleep(RATE_LIMIT_WAIT_S)
+    raise AssertionError("unreachable")
 
 
 def write_race(race: RaceData, year: int, event: pd.Series, source: str, raw_root: Path) -> None:
@@ -79,6 +97,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", default="configs/data.yaml")
     parser.add_argument("--seasons", type=int, nargs="*", help="override config seasons")
     parser.add_argument("--event", help="substring match on event name, location or country")
+    parser.add_argument("--wait-on-rate-limit", action="store_true",
+                        help="when FastF1's hourly API limit is hit, wait for it to clear and resume")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -107,7 +127,8 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             log.info("fetch %s [%s]", label, name)
             try:
-                write_race(source.fetch(year, event), year, event, name, raw_root)
+                write_race(fetch_respecting_limits(source, year, event, args.wait_on_rate_limit),
+                           year, event, name, raw_root)
             except RateLimitExceededError as exc:
                 log.error("API rate limit hit (%s). Re-run later to resume.", exc)
                 return 2

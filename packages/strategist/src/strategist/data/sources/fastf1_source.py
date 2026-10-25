@@ -7,13 +7,14 @@ import logging
 
 import fastf1
 import pandas as pd
-from fastf1.exceptions import DataNotLoadedError, RateLimitExceededError
+from fastf1.exceptions import DataNotLoadedError
 
 from strategist.data.sources import (
     RESULT_COLUMNS,
     WEATHER_COLUMNS,
     RaceData,
     TimingUnavailableError,
+    jolpica,
     timedeltas_to_seconds,
 )
 
@@ -26,15 +27,9 @@ class FastF1Source:
     def fetch(self, year: int, event: pd.Series) -> RaceData:
         rnd = int(event["RoundNumber"])
         laps, results, meta = self._race(year, rnd)
-        try:
-            quali = self._quali_best(year, rnd)
-        except RateLimitExceededError:
-            raise
-        except Exception as exc:
-            log.warning("%s R%02d: qualifying unavailable (%s)", year, rnd, exc)
-            quali = pd.DataFrame({"Driver": pd.Series(dtype=str),
-                                  "QualiBestS": pd.Series(dtype=float)})
-        return RaceData(laps=laps, results=results, quali=quali, meta=meta)
+        # Jolpica's Q1-Q3 times: one request instead of loading the whole qualifying
+        # session, and the same definition the OpenF1 adapter uses.
+        return RaceData(laps=laps, results=results, quali=jolpica.quali_best(year, rnd), meta=meta)
 
     def _race(self, year: int, rnd: int) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
         session = fastf1.get_session(year, rnd, "R")
@@ -64,12 +59,3 @@ class FastF1Source:
             "laps_completed": int(laps["LapNumber"].max()) if len(laps) else 0,
         }
         return laps, results, meta
-
-    @staticmethod
-    def _quali_best(year: int, rnd: int) -> pd.DataFrame:
-        session = fastf1.get_session(year, rnd, "Q")
-        session.load(laps=True, telemetry=False, weather=False, messages=False)
-        laps = session.laps
-        valid = laps[laps["Deleted"].ne(True) & laps["LapTime"].notna()]
-        best = valid.groupby("Driver")["LapTime"].min().dt.total_seconds()
-        return best.rename("QualiBestS").reset_index()
