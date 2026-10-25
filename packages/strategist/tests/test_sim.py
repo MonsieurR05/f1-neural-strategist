@@ -31,6 +31,7 @@ class StubNet:
 def params(**kw) -> SimParams:
     base = dict(pit_loss={}, pit_loss_global=20.0, pit_loss_sd=0.0, pit_loss_neutral_ratio=0.5,
                 sc_lap_ratio=1.5, vsc_lap_ratio=1.35, sc_queue_gap=0.8, sc_compress=0.35,
+                sc_first_lap_factor=1.0,
                 overtake_intercept={}, overtake_intercept_global=-50.0, overtake_pace=0.0,
                 overtake_gap=0.0, held_gap_low=0.5, held_gap_high=0.5, common_var_share=0.0,
                 driver_var_share=0.0)
@@ -76,10 +77,12 @@ def test_pit_stop_costs_the_pit_loss():
 
 def test_safety_car_closes_up_the_field_and_vsc_keeps_gaps():
     cars = [car("A", 0.0), car("B", 0.0), car("C", 0.0)]
-    # gaps shrink to 35% per SC lap: 10 s and 20 s gaps are a queue after three laps
-    sc = Simulator(StubNet(), params(), runs=3).run(setup(cars, [0, 10, 30], events={3: "SC", 4: "SC", 5: "SC"}))
-    gaps = np.diff(sc.times[5][0])
-    assert np.all(gaps < 1.0)
+    # no bunching on the deployment lap, then gaps shrink to 35% per lap down to the queue gap
+    events = {lap: "SC" for lap in range(3, 7)}
+    sc = Simulator(StubNet(), params(), runs=3).run(setup(cars, [0, 10, 30], events=events))
+    assert np.allclose(np.diff(sc.times[3][0]), [10, 20], atol=1e-3)
+    assert np.allclose(np.diff(sc.times[4][0]), [3.5, 7.0], atol=1e-3)
+    assert np.all(np.diff(sc.times[6][0]) < 1.0)
     vsc = Simulator(StubNet(), params(), runs=3).run(setup(cars, [0, 10, 30], events={3: "VSC"}))
     assert np.allclose(np.diff(vsc.times[3][0]), [10, 20])
 

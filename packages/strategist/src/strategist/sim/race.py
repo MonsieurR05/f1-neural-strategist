@@ -239,6 +239,7 @@ class Simulator:
             first_lap = 2
         for lap in range(first_lap - 1, L + 1):
             times[lap] = np.where(retire < lap, np.inf, times[lap])
+        sc_lap_no = np.zeros(R, dtype=int)  # laps into the current safety-car period, per run
 
         for lap in range(first_lap, L + 1):
             prev = times[lap - 1]
@@ -281,14 +282,17 @@ class Simulator:
             loss = np.where(pits, np.maximum(loss, 0.0), 0.0)
 
             t = prev + lap_time
-            # safety car: leader at SC pace, everyone else closes up into a queue
+            # safety car: leader at SC pace, everyone else closes up into a queue. On the lap
+            # it is deployed the field hardly bunches (cars slow at different points of the lap)
+            sc_lap_no = np.where(sc, sc_lap_no + 1, 0)
             if sc.any():
+                factor = np.where(sc_lap_no == 1, p.sc_first_lap_factor, p.sc_compress)[:, None]
                 t_sc = np.take_along_axis(prev, order, 1).copy()
                 lead_mu = np.take_along_axis(mu, order[:, :1], 1)[:, 0]
                 t_sc[:, 0] = t_sc[:, 0] + p.sc_lap_ratio * lead_mu
                 for k in range(1, C):
                     old_gap = sorted_prev[:, k] - sorted_prev[:, k - 1]
-                    new_gap = np.maximum(p.sc_queue_gap, old_gap * p.sc_compress)
+                    new_gap = np.maximum(p.sc_queue_gap, old_gap * factor[:, 0])
                     t_sc[:, k] = t_sc[:, k - 1] + np.where(np.isfinite(old_gap), new_gap, np.inf)
                 unsorted = np.empty_like(t_sc)
                 np.put_along_axis(unsorted, order, t_sc, 1)

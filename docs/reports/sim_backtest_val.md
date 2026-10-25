@@ -1,6 +1,6 @@
 # Race simulator backtest: Sakhir
 
-_Generated 2026-10-25 19:24 UTC from commit `ef25612` by `python -m strategist.sim.backtest`. Do not edit by hand._
+_Generated 2026-10-25 19:31 UTC from commit `b7d4713` by `python -m strategist.sim.backtest`. Do not edit by hand._
 
 **Setup.** Each race is replayed from the actual order and gaps after lap 1 with the strategies, safety-car/VSC laps and retirements that actually happened, 500 Monte Carlo runs. Lap-time network and simulator parameters are fitted on the training seasons only; training-season races are in-sample, the evaluation season (val) is held out. Actual order is road order at the line (official results include post-race penalties).
 
@@ -14,8 +14,8 @@ _Generated 2026-10-25 19:24 UTC from commit `ef25612` by `python -m strategist.s
 | held out | no interactions | 2.350 | 0.899 | 0.900 | 0.478 | 15.361 | 1.780 |
 | held out | lap-1 order | 2.300 | 0.856 | – | – | – | – |
 | held out | grid order | 2.300 | 0.886 | – | – | – | – |
-| in-sample | simulator | 1.507 | 0.898 | 0.901 | 0.422 | 21.132 | 1.722 |
-| in-sample | no interactions | 1.507 | 0.882 | 0.901 | 0.397 | 21.041 | 1.782 |
+| in-sample | simulator | 1.468 | 0.897 | 0.901 | 0.551 | 21.332 | 1.706 |
+| in-sample | no interactions | 1.498 | 0.885 | 0.901 | 0.501 | 21.227 | 1.773 |
 | in-sample | lap-1 order | 2.201 | 0.786 | – | – | – | – |
 | in-sample | grid order | 2.027 | 0.835 | – | – | – | – |
 
@@ -23,8 +23,8 @@ _Generated 2026-10-25 19:24 UTC from commit `ef25612` by `python -m strategist.s
 
 | race | role | pos_mae | spearman | coverage_80 | p_actual_winner | gap_mae_s | lap_pos_mae |
 |---|---|---|---|---|---|---|---|
-| 2021_01 | in-sample | 1.375 | 0.935 | 0.938 | 0.088 | 26.320 | 1.734 |
-| 2022_01 | in-sample | 1.618 | 0.887 | 0.882 | 0.504 | 11.760 | 1.834 |
+| 2021_01 | in-sample | 1.375 | 0.941 | 0.938 | 0.096 | 27.125 | 1.727 |
+| 2022_01 | in-sample | 1.500 | 0.877 | 0.882 | 0.882 | 11.552 | 1.795 |
 | 2023_01 | in-sample | 1.529 | 0.873 | 0.882 | 0.674 | 25.318 | 1.597 |
 | 2024_01 | held out | 2.125 | 0.899 | 0.850 | 0.504 | 14.891 | 1.754 |
 

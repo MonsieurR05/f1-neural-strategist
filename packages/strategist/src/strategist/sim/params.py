@@ -30,8 +30,9 @@ class SimParams:
     # neutralised laps
     sc_lap_ratio: float
     vsc_lap_ratio: float
-    sc_queue_gap: float
-    sc_compress: float
+    sc_queue_gap: float           # following gap once queued behind the safety car (s)
+    sc_compress: float            # gap multiplier per safety-car lap after the first
+    sc_first_lap_factor: float    # gap multiplier on the lap the SC is deployed (≈ no bunching)
     # overtaking: P(pass) = sigmoid(a_circuit + b·pace_advantage + c·gap) for pairs < 1 s apart
     overtake_intercept: dict[str, float]
     overtake_intercept_global: float
@@ -146,6 +147,42 @@ def _overtake_pairs(laps: pd.DataFrame, mu: pd.Series) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _sc_queue(laps: pd.DataFrame, status: pd.Series) -> tuple[float, float, float]:
+    """How the field closes up behind the safety car, from consecutive-car gaps at the line.
+
+    Returns (first-lap gap multiplier, per-lap multiplier after that, queued following gap).
+    Pairs involving a car that pits on either lap, and cars a lap down, are left out.
+    """
+    stopping = laps["pit_in_time_s"].notna() | laps["pit_out_time_s"].notna()
+    rows = []
+    for race_id, s in status.groupby(level=0):
+        s = s.droplevel(0).sort_index()
+        g = laps[laps["race_id"] == race_id]
+        times = g.pivot_table(index="lap_number", columns="driver", values="session_time_s")
+        pits = (g.assign(p=stopping[g.index].astype(float))
+                .pivot_table(index="lap_number", columns="driver", values="p", aggfunc="max") > 0)
+        k = 0
+        for lap, kind in s.items():
+            k = k + 1 if kind == "SC" else 0
+            if k == 0 or lap - 1 not in times.index or lap not in times.index:
+                continue
+            prev, cur = times.loc[lap - 1].dropna().sort_values(), times.loc[lap].dropna()
+            order = [d for d in prev.index if d in cur.index and prev[d] - prev.iloc[0] < 60]
+            busy = set(pits.columns[pits.loc[[lap - 1, lap]].any()]) if lap in pits.index else set()
+            for a, b in zip(order[:-1], order[1:], strict=True):
+                if a in busy or b in busy:
+                    continue
+                g0, g1 = prev[b] - prev[a], cur[b] - cur[a]
+                if g1 > 0:
+                    rows.append({"k": k, "g0": g0, "g1": g1})
+    d = pd.DataFrame(rows)
+    spread = d[d["g0"] > 3.0].assign(ratio=lambda x: x["g1"] / x["g0"])  # not yet queued
+    first = float(spread.loc[spread["k"] == 1, "ratio"].median())
+    later = float(spread.loc[spread["k"] >= 2, "ratio"].median())
+    queued = float(d.loc[(d["k"] >= 3) & (d["g1"] < 3.0), "g1"].median())
+    return first, later, queued
+
+
 def _neutral_periods(status: pd.Series) -> pd.DataFrame:
     rows = []
     for race_id, s in status.groupby(level=0):
@@ -184,6 +221,7 @@ def calibrate(laps: pd.DataFrame, races: pd.DataFrame, net, seasons: list[int]) 
     pure = tagged["track_status"].astype(str)
     sc_ratio = float(ratio[pure.eq("4")].median())
     vsc_ratio = float(ratio[pure.isin(["6", "67", "7"])].median())
+    sc_first, sc_later, sc_gap = _sc_queue(laps, status)
 
     prepared = prepare(laps.dropna(subset=["tyre_life", "lap_time_s"]))
     mu, _ = net.predict_dist(prepared)
@@ -228,7 +266,8 @@ def calibrate(laps: pd.DataFrame, races: pd.DataFrame, net, seasons: list[int]) 
         pit_loss_sd=round(float(1.4826 * (green - green.median()).abs().median()), 2),
         pit_loss_neutral_ratio=round(neutral_ratio, 3),
         sc_lap_ratio=round(sc_ratio, 3), vsc_lap_ratio=round(vsc_ratio, 3),
-        sc_queue_gap=0.8, sc_compress=0.35,
+        sc_queue_gap=round(sc_gap, 3), sc_compress=round(sc_later, 3),
+        sc_first_lap_factor=round(sc_first, 3),
         overtake_intercept={c: round(b0 + float(w), 3) for c, w in zip(circuits, coef[2:], strict=True)},
         overtake_intercept_global=round(b0 + float(np.mean(coef[2:])), 3),
         overtake_pace=round(float(coef[0]), 3), overtake_gap=round(float(coef[1]), 3),
