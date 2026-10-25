@@ -36,6 +36,24 @@ curl -X POST localhost:8000/optimise -H "content-type: application/json" \
      -d '{"race_id": "2024_01", "driver": "LEC", "start_lap": 1, "top": 5}'
 ```
 
+## Deployment (Fly.io)
+
+Live at https://f1-neural-strategist-api.fly.dev (health: `/health`, docs: `/docs`).
+
+- Image: `services/api/Dockerfile` (CPU-only torch, pinned runtime deps, the strategist
+  package without its pipeline/training extras, processed data, race results, track
+  outlines and trained models; 390 MB compressed). The data and model files are local build
+  artifacts, so deploy from a checkout where they have been built.
+- Config: `fly.toml` at the repository root: one `shared-cpu-2x` machine with 1 GB in `lhr`
+  that stops when idle (an optimisation peaks at ~650 MB), health check on `/health`, and
+  `F1S_CORS_ORIGINS` set to the Vercel site only. `configs/api.deploy.yaml` is the public
+  profile: lighter optimiser (~40 s on 2 vCPU when idle) and per-client quotas of 60
+  simulations and 8 optimisations an hour, one optimisation at a time.
+
+```bash
+fly deploy --ha=false
+```
+
 ## Tests
 
 ```bash

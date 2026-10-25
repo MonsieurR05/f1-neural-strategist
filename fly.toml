@@ -1,0 +1,41 @@
+# Fly.io deployment of the strategy API (services/api). Deploy from the repository root after
+# building the data and model artifacts (see services/api/Dockerfile):
+#
+#   fly deploy --ha=false
+#
+# One small machine that stops when idle and starts on the next request, so a quiet portfolio
+# site costs close to nothing. An optimisation peaks at ~650 MB, hence 1 GB.
+
+app = "f1-neural-strategist-api"
+primary_region = "lhr"
+
+[build]
+  dockerfile = "services/api/Dockerfile"
+
+[env]
+  F1S_THREADS = "2"
+  PORT = "8080"
+  # the only browser origin allowed to call the API (the Vercel frontend)
+  F1S_CORS_ORIGINS = "https://f1-neural-strategist.vercel.app"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 8
+    hard_limit = 16
+
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-2x"
+  memory = "1gb"

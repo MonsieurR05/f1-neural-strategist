@@ -4,15 +4,18 @@ An interactive Formula 1 race-strategy simulator and decision-support tool. A
 neural lap-time model, trained on real timing data, drives a Monte Carlo race
 simulator that evaluates pit strategies and explains why one beats another.
 
-> Status: early development. Phases 0–4 are complete: data pipeline, exploration, an
-> evaluation harness with three non-neural baselines, the structured probabilistic
-> lap-time network ([validation report](docs/reports/lap_time_models_val.md),
-> [model card](docs/MODEL_CARD.md)), the Monte Carlo race simulator
-> ([backtest](docs/reports/sim_backtest_val.md)), the strategy optimiser behind a
-> FastAPI service ([API](services/api/README.md)), and the Next.js web app
-> ([web](apps/web/README.md)): race replay on a circuit map, gap chart, strategy builder and
-> optimiser. Next: fix compound labelling (C1–C5 mapping), then deploy. See
-> [docs/DESIGN.md](docs/DESIGN.md) for the full design.
+**Live:** https://f1-neural-strategist.vercel.app (try the
+[2024 Bahrain GP](https://f1-neural-strategist.vercel.app/race/2024_01)). The API runs on a
+small machine that sleeps when idle, so the first request after a quiet spell takes a few
+seconds longer.
+
+> Status: phases 0–5 are complete and deployed: data pipeline, exploration, an evaluation
+> harness with three non-neural baselines, the structured probabilistic lap-time network
+> ([validation report](docs/reports/lap_time_models_val.md), [model card](docs/MODEL_CARD.md)),
+> the Monte Carlo race simulator ([backtest](docs/reports/sim_backtest_val.md)), the strategy
+> optimiser behind a FastAPI service ([API](services/api/README.md)), and the Next.js web app
+> ([web](apps/web/README.md)). Next: the fast strategy surrogate and in-race "pit wall" mode.
+> See [docs/DESIGN.md](docs/DESIGN.md) for the full design.
 
 **Lap-time forecasting on an unseen season (2024 validation, 19,969 laps):**
 
