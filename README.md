@@ -4,11 +4,12 @@ An interactive Formula 1 race-strategy simulator and decision-support tool. A
 neural lap-time model, trained on real timing data, drives a Monte Carlo race
 simulator that evaluates pit strategies and explains why one beats another.
 
-> Status: early development. Phases 0–2 are complete: data pipeline, exploration, an
-> evaluation harness with three non-neural baselines, and the structured probabilistic
+> Status: early development. Phases 0–3 are complete: data pipeline, exploration, an
+> evaluation harness with three non-neural baselines, the structured probabilistic
 > lap-time network ([validation report](docs/reports/lap_time_models_val.md),
-> [model card](docs/MODEL_CARD.md)). Next is phase 3, the race simulator. See
-> [docs/DESIGN.md](docs/DESIGN.md) for the full design.
+> [model card](docs/MODEL_CARD.md)), and the Monte Carlo race simulator
+> ([backtest](docs/reports/sim_backtest_val.md)). Next is phase 4, the strategy optimiser
+> and API. See [docs/DESIGN.md](docs/DESIGN.md) for the full design.
 
 **Lap-time forecasting on an unseen season (2024 validation, 19,969 laps):**
 
@@ -24,6 +25,14 @@ The network is significantly more accurate than LightGBM on absolute lap time (�
 calibrated uncertainty, and is best on every metric at Bahrain, the MVP circuit. Its
 degradation curves can never decrease with tyre age, so strategy counterfactuals stay
 physically plausible.
+
+**Race simulator backtest (2024 Bahrain GP, held out, 500 runs):** replayed from the order
+after lap 1 with the strategies actually used, the simulator's median finishing positions
+are off by 2.13 places on average (frozen lap-1 order 2.30, grid order 2.30, simulator
+without traffic and overtaking 2.35), with rank correlation 0.90 and well-calibrated 80%
+intervals (85% coverage).
+
+![Simulated vs actual finishing positions, 2024 Bahrain GP](docs/figures/sim_backtest_2024_01.png)
 
 ![Bahrain tyre degradation by compound and season](docs/figures/bahrain_degradation.png)
 
@@ -86,6 +95,13 @@ python -m strategist.eval.run --config configs/eval.yaml
 ```
 
 The test season is reserved for the final comparison and needs `--split test --final`.
+
+Backtest the race simulator on Bahrain (trains and caches lap_net and the simulator
+parameters under `artifacts/models/` on first run; writes `docs/reports/sim_backtest_val.md`):
+
+```bash
+python -m strategist.sim.backtest --config configs/sim.yaml
+```
 
 ## Disclaimer
 

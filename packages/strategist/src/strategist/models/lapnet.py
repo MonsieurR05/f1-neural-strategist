@@ -273,6 +273,9 @@ class LapTimeNet:
             resid_parts.append(self._target(fold_eval) - mu)
             resid_laps.append(fold_eval)
         log.info("lap_net: σ head from %d out-of-season residuals", sum(len(r) for r in resid_parts))
+        if resid_parts:  # kept for the simulator's split of race-level vs lap-level variance
+            self.oos_residuals = pd.concat(resid_laps)[["race_id", "driver", "q_s"]].assign(
+                resid_pct=torch.cat(resid_parts).numpy())
 
         self.modules = []
         for k in range(self.ensemble):
@@ -308,6 +311,49 @@ class LapTimeNet:
 
     def predict(self, df: pd.DataFrame) -> pd.Series:
         return self.predict_dist(df)[0]
+
+    def predict_batch(self, b: Batch) -> tuple[torch.Tensor, torch.Tensor]:
+        """Mixture mean and σ (percent of q_s) for a pre-built batch: the simulator's fast path."""
+        with torch.no_grad():
+            outs = [m(b) for m in self.modules]
+        mus = torch.stack([o["mu"] for o in outs])
+        var = torch.stack([o["sigma"] ** 2 for o in outs])
+        mu = mus.mean(0)
+        return mu, ((var + mus**2).mean(0) - mu**2).clamp_min(SIGMA_FLOOR**2).sqrt()
+
+    def static_inputs(self, df: pd.DataFrame) -> tuple[torch.Tensor, torch.Tensor]:
+        """Circuit index and standardised context for one row per car (constant within a race)."""
+        b = self._batch(df.assign(tyre_life=1.0, laps_remaining=0.0, fresh_tyre=1.0,
+                                  gap_ahead_s=10.0, is_leader=0.0, fuel_frac=0.0))
+        return b.circuit, b.context
+
+    # ---- persistence ------------------------------------------------------------------------
+    def save(self, path) -> None:
+        torch.save({
+            "init": {k: getattr(self, k) for k in ("lr", "weight_decay", "batch_size",
+                                                     "max_epochs", "patience", "huber_delta",
+                                                     "circuit_dropout", "sigma_epochs",
+                                                     "ensemble", "seed", "threads")} | self.hp,
+            "circuit_index": self.circuit_index, "mean": self.mean.to_dict(),
+            "std": self.std.to_dict(), "epochs": self.epochs,
+            "states": [m.state_dict() for m in self.modules],
+            "oos_residuals": getattr(self, "oos_residuals", None),
+        }, path)
+
+    @classmethod
+    def load(cls, path) -> "LapTimeNet":
+        blob = torch.load(path, weights_only=False)
+        net = cls(**blob["init"])
+        net.circuit_index, net.epochs = blob["circuit_index"], blob["epochs"]
+        net.mean, net.std = pd.Series(blob["mean"]), pd.Series(blob["std"])
+        net.oos_residuals = blob["oos_residuals"]
+        net.modules = []
+        for state in blob["states"]:
+            m = LapNetModule(len(net.circuit_index) + 1, **net.hp)
+            m.load_state_dict(state)
+            m.eval()
+            net.modules.append(m)
+        return net
 
     def components(self, df: pd.DataFrame) -> pd.DataFrame:
         """Additive terms in seconds (ensemble mean), for explanations."""

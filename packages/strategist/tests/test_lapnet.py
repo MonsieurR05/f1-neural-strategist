@@ -85,6 +85,15 @@ def test_recovers_fuel_and_degradation_on_synthetic_races(fitted):
     assert err < 0.1
 
 
+def test_save_load_roundtrip(fitted, tmp_path):
+    net, df = fitted
+    net.save(tmp_path / "net.pt")
+    loaded = LapTimeNet.load(tmp_path / "net.pt")
+    a, b = net.predict_dist(df.head(20)), loaded.predict_dist(df.head(20))
+    assert np.allclose(a[0], b[0]) and np.allclose(a[1], b[1])
+    assert len(loaded.oos_residuals) == len(df)
+
+
 def test_predict_dist_and_unseen_circuit(fitted):
     net, df = fitted
     mu, sigma = net.predict_dist(df.head(10).assign(circuit="Nowhere"))

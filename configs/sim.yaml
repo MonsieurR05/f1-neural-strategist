@@ -1,0 +1,10 @@
+# Race simulator backtest (python -m strategist.sim.backtest).
+data_config: configs/data.yaml
+eval_config: configs/eval.yaml     # lap_net hyperparameters and seed
+circuit: Sakhir
+runs: 500
+seed: 0
+start_lap: 1                        # replay from the actual order and gaps after lap 1
+model_dir: artifacts/models         # cached lap_net + calibrated simulator parameters
+report_dir: docs/reports
+figure_dir: docs/figures
