@@ -8,6 +8,7 @@ from strategist.data.sources.openf1 import (
     build_laps,
     expand_stints,
     lap_track_status,
+    quali_best_laps,
     track_status_events,
 )
 
@@ -72,6 +73,18 @@ def test_expand_stints_tyre_life_convention():
     assert out.loc[3.0, "TyreLife"] == 6
     assert out.loc[4.0, "TyreLife"] == 1 and out.loc[4.0, "FreshTyre"]
     assert out.loc[6.0, "Compound"] == "HARD"  # open-ended final stint runs to max_lap
+
+
+def test_quali_best_laps_skips_deleted_laps():
+    laps = pd.DataFrame({"driver_number": [4, 4, 4, 81],
+                         "lap_duration": [86.123, 86.400, None, 86.300]})
+    rc = pd.DataFrame({"message": [
+        "CAR 4 (NOR) TIME 1:26.123 DELETED - TRACK LIMITS AT TURN 17 LAP 5 15:04:11",
+        "GREEN LIGHT - PIT EXIT OPEN",
+    ]})
+    drivers = pd.DataFrame({"driver_number": [4, 81], "name_acronym": ["NOR", "PIA"]})
+    best = quali_best_laps(laps, rc, drivers).set_index("Driver")["QualiBestS"]
+    assert best.to_dict() == {"NOR": 86.4, "PIA": 86.3}
 
 
 @pytest.fixture

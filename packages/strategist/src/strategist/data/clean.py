@@ -27,7 +27,7 @@ WET_COMPOUNDS = {"INTERMEDIATE", "WET"}
 # Checked in this order; a lap gets the first reason that applies.
 EXCLUSION_ORDER = [
     "wet_race", "no_time", "generated", "lap1", "pit_in", "pit_out",
-    "neutralised", "non_slick", "inaccurate", "slow_outlier",
+    "neutralised", "non_slick", "rain", "damp", "inaccurate", "slow_outlier",
 ]
 
 RENAME = {
@@ -80,8 +80,20 @@ def add_quali_prior(laps: pd.DataFrame, quali: pd.DataFrame) -> pd.DataFrame:
     return laps
 
 
-def is_wet_race(laps: pd.DataFrame) -> bool:
-    return bool(laps["compound"].isin(WET_COMPOUNDS).any() or laps["rainfall"].eq(True).any())
+def is_wet_race(laps: pd.DataFrame, inter_share: float, rain_share: float) -> bool:
+    """Wet enough to drop the whole race. Races with a brief shower or a few laps on
+    intermediates stay in, and their affected laps are excluded individually."""
+    return bool(laps["compound"].isin(WET_COMPOUNDS).mean() >= inter_share
+                or laps["rainfall"].eq(True).mean() >= rain_share)
+
+
+def damp_laps(laps: pd.DataFrame, window: int) -> pd.Series:
+    """Laps within ``window`` laps of anyone running intermediates/wets (drying or wetting track)."""
+    wet_lap_numbers = laps.loc[laps["compound"].isin(WET_COMPOUNDS), "lap_number"].unique()
+    near = set()
+    for n in wet_lap_numbers:
+        near.update(range(n - window, n + window + 1))
+    return laps["lap_number"].isin(near)
 
 
 def assign_exclusions(
@@ -91,6 +103,7 @@ def assign_exclusions(
     dry_only: bool,
     neutralised_status: list[str],
     slow_outlier_ratio: float,
+    damp_window_laps: int = 2,
 ) -> pd.Series:
     status = laps["track_status"].fillna("").astype(str)
     checks = {
@@ -102,6 +115,8 @@ def assign_exclusions(
         "pit_out": laps["pit_out_time_s"].notna(),
         "neutralised": status.apply(lambda s: any(code in s for code in neutralised_status)),
         "non_slick": ~laps["compound"].isin(SLICKS),
+        "rain": laps["rainfall"].eq(True),
+        "damp": damp_laps(laps, damp_window_laps),
         "inaccurate": laps["is_accurate"].ne(True),
     }
     reason = pd.Series(pd.NA, index=laps.index, dtype="string")
@@ -138,13 +153,14 @@ def build_race(race_path: Path, cfg: dict) -> tuple[pd.DataFrame, dict]:
     laps.insert(1, "circuit", circuit)
     laps["team_season"] = laps["team"] + "_" + laps["year"].astype(str)
 
-    wet = is_wet_race(laps)
+    wet = is_wet_race(laps, cleaning["wet_race_inter_share"], cleaning["wet_race_rain_share"])
     laps["exclude_reason"] = assign_exclusions(
         laps,
         wet_race=wet,
         dry_only=cfg["dry_only"],
         neutralised_status=[str(s) for s in cleaning["neutralised_track_status"]],
         slow_outlier_ratio=cleaning["slow_outlier_ratio"],
+        damp_window_laps=cleaning["damp_window_laps"],
     )
 
     race = {

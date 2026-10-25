@@ -76,11 +76,28 @@ def test_wet_race_excludes_everything():
     assert exclusions(make_laps(), wet_race=True).eq("wet_race").all()
 
 
-def test_is_wet_race():
-    laps = make_laps()
-    assert not is_wet_race(laps)
+def test_is_wet_race_uses_shares_not_any():
+    laps = make_laps(n_laps=10)  # 20 laps
     laps.loc[0, "rainfall"] = True
-    assert is_wet_race(laps)
+    laps.loc[1, "compound"] = "INTERMEDIATE"
+    assert not is_wet_race(laps, inter_share=0.10, rain_share=0.25)
+    laps.loc[2, "compound"] = "INTERMEDIATE"
+    assert is_wet_race(laps, inter_share=0.10, rain_share=0.25)
+    laps["compound"] = "MEDIUM"
+    laps.loc[:4, "rainfall"] = True
+    assert is_wet_race(laps, inter_share=0.10, rain_share=0.25)
+
+
+def test_rain_and_damp_laps_excluded_in_dry_race():
+    laps = make_laps(n_laps=10)
+    laps.loc[(laps.driver == "AAA") & (laps.lap_number == 2), "compound"] = "INTERMEDIATE"
+    laps.loc[(laps.driver == "BBB") & (laps.lap_number == 8), "rainfall"] = True
+    reason = exclusions(laps).set_axis(pd.MultiIndex.from_frame(laps[["driver", "lap_number"]]))
+    assert reason[("AAA", 2)] == "non_slick"
+    assert reason[("BBB", 2)] == "damp" and reason[("BBB", 4)] == "damp"
+    assert pd.isna(reason[("BBB", 5)])
+    assert reason[("BBB", 8)] == "rain"
+    assert pd.isna(reason[("AAA", 8)])
 
 
 def test_interval_start_is_previous_lap_gap():

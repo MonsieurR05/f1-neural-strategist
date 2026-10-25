@@ -17,10 +17,15 @@ focus_circuit: Sakhir   # Bahrain International Circuit (grand prix layout); MVP
 cleaning:
   neutralised_track_status: ["4", "5", "6", "7"]  # SC, red flag, VSC, VSC ending
   slow_outlier_ratio: 1.07                        # vs the race's median clean lap
+  wet_race_inter_share: 0.10    # drop the whole race if >= 10% of laps on inters/wets...
+  wet_race_rain_share: 0.25     # ...or rain reported on >= 25% of laps
+  damp_window_laps: 2           # else drop slick laps within 2 laps of anyone on inters
 
 # Circuit key = FastF1 location unless aliased here (by event name or location).
 circuit_aliases:
   Sakhir Grand Prix: Sakhir Outer   # 2020, outer layout: different track, not Bahrain GP
+  Miami Gardens: Miami              # location renamed in 2025
+  Monte Carlo: Monaco               # 2021 name for the same circuit
 
 paths:
   fastf1_cache: data/cache

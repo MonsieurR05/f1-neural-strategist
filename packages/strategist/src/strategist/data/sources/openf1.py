@@ -15,6 +15,7 @@ are throttled to the free tier (30 per minute).
 
 import json
 import logging
+import re
 import time
 from pathlib import Path
 
@@ -99,14 +100,31 @@ class OpenF1Source:
         team_by_number = laps.drop_duplicates("DriverNumber").set_index("DriverNumber")["Team"]
         results["TeamName"] = results["DriverNumber"].map(team_by_number).fillna(results["TeamName"])
 
+        quali, quali_source = jolpica.quali_best(year, rnd), "jolpica"
+        if len(quali) < len(results) // 2:
+            log.warning("%s R%02d: Jolpica has no qualifying times; using OpenF1 laps", year, rnd)
+            quali, quali_source = self._quali_best(int(session["meeting_key"])), "openf1"
+
         meta = {
             # winner's lap count; the originally scheduled distance isn't in OpenF1
             "total_laps": int(results["Laps"].max()),
             "laps_completed": int(laps["LapNumber"].max()),
+            "quali_source": quali_source,
             "openf1_session_key": key,
             "openf1_meeting_key": int(session["meeting_key"]),
         }
-        return RaceData(laps=laps, results=results, quali=jolpica.quali_best(year, rnd), meta=meta)
+        return RaceData(laps=laps, results=results, quali=quali, meta=meta)
+
+    def _quali_best(self, meeting_key: int) -> pd.DataFrame:
+        sessions = self.client.get("sessions", meeting_key=meeting_key, session_name="Qualifying")
+        if not sessions:
+            return pd.DataFrame({"Driver": pd.Series(dtype=str), "QualiBestS": pd.Series(dtype=float)})
+        key = sessions[0]["session_key"]
+        return quali_best_laps(
+            pd.DataFrame(self.client.get("laps", session_key=key)),
+            pd.DataFrame(self.client.get("race_control", session_key=key)),
+            pd.DataFrame(self.client.get("drivers", session_key=key)),
+        )
 
     def _race_session(self, year: int, event: pd.Series) -> pd.Series:
         if year not in self._sessions:
@@ -119,6 +137,25 @@ class OpenF1Source:
         if delta.empty or delta.min() > pd.Timedelta(days=1):
             raise TimingUnavailableError(f"no OpenF1 race session near {race_start:%Y-%m-%d}")
         return sessions.loc[delta.idxmin()]
+
+
+DELETED_LAP = re.compile(r"CAR (\d+) \(\w+\) TIME (\d+):(\d+\.\d+) DELETED")
+
+
+def quali_best_laps(laps: pd.DataFrame, race_control: pd.DataFrame,
+                    drivers: pd.DataFrame) -> pd.DataFrame:
+    """Best qualifying lap per driver, skipping laps race control deleted (matched by time)."""
+    deleted = set()
+    for msg in race_control.get("message", pd.Series(dtype=str)).dropna():
+        if m := DELETED_LAP.search(msg):
+            deleted.add((int(m[1]), round(int(m[2]) * 60 + float(m[3]), 3)))
+    timed = laps.dropna(subset=["lap_duration"])
+    keep = [(int(d), round(t, 3)) not in deleted
+            for d, t in zip(timed["driver_number"], timed["lap_duration"], strict=True)]
+    best = timed[keep].groupby("driver_number")["lap_duration"].min()
+    acronym = drivers.drop_duplicates("driver_number", keep="last").set_index("driver_number")
+    return pd.DataFrame({"Driver": best.index.map(acronym["name_acronym"]),
+                         "QualiBestS": best.to_numpy()}).dropna()
 
 
 def seconds_since(dates: pd.Series, origin: pd.Timestamp) -> pd.Series:
