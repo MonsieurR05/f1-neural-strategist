@@ -8,8 +8,10 @@ simulator that evaluates pit strategies and explains why one beats another.
 > evaluation harness with three non-neural baselines, the structured probabilistic
 > lap-time network ([validation report](docs/reports/lap_time_models_val.md),
 > [model card](docs/MODEL_CARD.md)), the Monte Carlo race simulator
-> ([backtest](docs/reports/sim_backtest_val.md)), and the strategy optimiser behind a
-> FastAPI service ([API](services/api/README.md)). Next is phase 5, the web frontend. See
+> ([backtest](docs/reports/sim_backtest_val.md)), the strategy optimiser behind a
+> FastAPI service ([API](services/api/README.md)), and the Next.js web app
+> ([web](apps/web/README.md)): race replay on a circuit map, gap chart, strategy builder and
+> optimiser. Next: fix compound labelling (C1–C5 mapping), then deploy. See
 > [docs/DESIGN.md](docs/DESIGN.md) for the full design.
 
 **Lap-time forecasting on an unseen season (2024 validation, 19,969 laps):**
@@ -108,7 +110,15 @@ Serve the strategy API (races, simulation, optimisation; docs at `/docs`):
 
 ```bash
 pip install -e services/api[dev]
+python -m strategist.data.tracks --circuit Sakhir   # circuit outline for the replay map
 uvicorn app.main:app --app-dir services/api --reload
+```
+
+Run the web app (http://localhost:3000):
+
+```bash
+npm --prefix apps/web install
+npm --prefix apps/web run dev
 ```
 
 ## Disclaimer

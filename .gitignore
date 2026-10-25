@@ -33,3 +33,6 @@ mlruns/
 Thumbs.db
 .vscode/
 .idea/
+
+# Local editor/agent settings (machine-specific paths)
+/.claude/

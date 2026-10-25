@@ -27,6 +27,7 @@ from app.schemas import (
     SimulateResponse,
     StintModel,
     StrategyResult,
+    Track,
 )
 from app.state import MODEL_CAVEATS, AppState, config_path, finite_or_none
 from strategist.config import load_config
@@ -110,10 +111,22 @@ def create_app(config: str | None = None) -> FastAPI:
         pos = laps.pivot_table(index="lap_number", columns="driver", values="position")
         t = laps.pivot_table(index="lap_number", columns="driver", values="session_time_s")
         gap = t.sub(t.min(axis=1), axis=0)
+        leader_time = t.min(axis=1)
+        clean = laps.loc[laps["exclude_reason"].isna(), "lap_time_s"]
         return RaceDetail(
             race=summary(race_id), drivers=drivers, events=events,
             positions_by_lap={d: [None if np.isnan(v) else int(v) for v in pos[d]] for d in order if d in pos},
-            gap_to_leader_by_lap={d: finite_or_none(gap[d]) for d in order if d in gap})
+            gap_to_leader_by_lap={d: finite_or_none(gap[d]) for d in order if d in gap},
+            leader_lap_time_s=finite_or_none(leader_time.diff()),
+            nominal_lap_s=round(float(clean.median()), 3))
+
+    @app.get("/circuits/{circuit}/track", response_model=Track)
+    def track(circuit: str) -> Track:
+        data = st().track(circuit)
+        if data is None:
+            raise HTTPException(404, f"no track outline for {circuit!r} "
+                                     "(build it with python -m strategist.data.tracks)")
+        return Track(circuit=circuit, **data)
 
     def apply_overrides(setup: RaceSetup, overrides: dict[str, list[StintModel]]) -> None:
         for driver, stints in overrides.items():

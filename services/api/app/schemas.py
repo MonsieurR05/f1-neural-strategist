@@ -49,6 +49,15 @@ class RaceDetail(BaseModel):
     events: list[LapEvent]
     positions_by_lap: dict[str, list[int | None]]
     gap_to_leader_by_lap: dict[str, list[float | None]]
+    leader_lap_time_s: list[float | None] = Field(description="race leader's time for each lap")
+    nominal_lap_s: float = Field(description="median clean racing lap, for animation")
+
+
+class Track(BaseModel):
+    circuit: str
+    source: str
+    points: list[tuple[float, float]] = Field(description="normalised x, y; first point on the start/finish line")
+    fraction: list[float] = Field(description="share of the lap distance at each point")
 
 
 class SimulateRequest(BaseModel):

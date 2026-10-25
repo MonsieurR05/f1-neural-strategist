@@ -1,6 +1,7 @@
 """Data and models loaded once at startup, plus race setups built from history."""
 
 import copy
+import json
 import os
 from functools import lru_cache
 from pathlib import Path
@@ -32,6 +33,7 @@ class AppState:
         self.cfg = load_config(config_path)
         data_cfg = load_config(self.cfg["data_config"])
         processed = Path(data_cfg["paths"]["processed"])
+        self.track_dir = processed / "tracks"
         self.raw_root = Path(data_cfg["paths"]["raw"])
         self.laps = pd.read_parquet(processed / "laps.parquet")
         self.races = pd.read_parquet(processed / "races.parquet").set_index("race_id")
@@ -64,6 +66,10 @@ class AppState:
 
     def tyre_limits(self, circuit: str) -> dict[str, int]:
         return tyre_limits(self.train_laps, circuit)
+
+    def track(self, circuit: str) -> dict | None:
+        path = self.track_dir / f"{circuit}.json"
+        return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
 
     def events(self, race_id: str) -> pd.Series:
         return lap_status(self.laps[self.laps["race_id"] == race_id]).droplevel(0)

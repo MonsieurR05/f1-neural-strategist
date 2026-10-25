@@ -41,6 +41,14 @@ def test_race_detail_is_historical(client):
     assert len(detail["positions_by_lap"]["VER"]) == 57
 
 
+def test_track_outline_and_replay_timing(client):
+    track = client.get("/circuits/Sakhir/track").json()
+    assert len(track["points"]) == len(track["fraction"]) > 100 and track["fraction"][0] == 0.0
+    assert client.get("/circuits/Nowhere/track").status_code == 404
+    detail = client.get("/races/2024_01").json()
+    assert 85 < detail["nominal_lap_s"] < 105 and len(detail["leader_lap_time_s"]) == 57
+
+
 def test_unknown_and_wet_races(client):
     assert client.get("/races/1999_01").status_code == 404
     wet = next(r for r in client.get("/races").json() if r["wet"])

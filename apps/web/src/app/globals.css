@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/* Pit-wall console: a dark-only engineering UI. Colour roles, not raw hex, are used in
+   components. Chart colours were checked with the dataviz palette validator on this surface. */
+:root {
+  color-scheme: dark;
+  --surface-0: #121211;      /* page */
+  --surface-1: #1a1a19;      /* panels, chart surface */
+  --surface-2: #242422;      /* raised controls */
+  --line: #34332f;           /* borders, grid */
+  --line-strong: #4a4944;
+  --ink: #f0efec;            /* primary text */
+  --ink-2: #c3c2b7;          /* secondary text */
+  --ink-3: #8f8e86;          /* muted text, other drivers */
+
+  /* driver highlights (validated all-pairs on the dark surface) */
+  --focus: #3987e5;
+  --rival: #d95926;
+  --third: #199e70;
+
+  /* tyres: F1 convention, always shown with their S/M/H letter */
+  --soft: #e34948;
+  --medium: #eda100;
+  --hard: #e8e6e3;
+
+  /* status */
+  --sc: #eda100;
+  --warn: #e66767;
+}
+
+@theme inline {
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-focus: var(--focus);
+  --color-rival: var(--rival);
+  --color-soft: var(--soft);
+  --color-medium: var(--medium);
+  --color-hard: var(--hard);
+  --color-warn: var(--warn);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--surface-0);
+  color: var(--ink);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
