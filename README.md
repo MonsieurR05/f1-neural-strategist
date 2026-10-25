@@ -29,7 +29,7 @@ physically plausible.
 
 **Race simulator backtest (2024 Bahrain GP, held out, 500 runs):** replayed from the order
 after lap 1 with the strategies actually used, the simulator's median finishing positions
-are off by 2.13 places on average (frozen lap-1 order 2.30, grid order 2.30, simulator
+are off by 2.10 places on average (frozen lap-1 order 2.30, grid order 2.30, simulator
 without traffic and overtaking 2.35), with rank correlation 0.90 and well-calibrated 80%
 intervals (85% coverage).
 
