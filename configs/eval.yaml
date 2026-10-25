@@ -1,0 +1,30 @@
+# Lap-time model evaluation (python -m strategist.eval.run). Splits come from data_config.
+data_config: configs/data.yaml
+seed: 42
+focus_circuit: Sakhir
+
+sigma:
+  min_circuit_laps: 200   # per-circuit σ needs this many leave-one-season-out residuals
+
+models:
+  circuit_pace: {}
+  fuel_deg_linear:
+    prior_laps: 300       # pull towards the pooled fit, in laps' worth of evidence
+  # Chosen on an inner split inside the training seasons (fit 2021-22, score 2023) by
+  # within-race MAE: no weather proxies, start from circuit median ratio, smaller trees.
+  lightgbm:
+    drop_features: [air_temp, humidity]
+    circuit_offset: true
+    learning_rate: 0.03
+    num_leaves: 15
+    min_data_in_leaf: 300
+    feature_fraction: 0.8
+    bagging_fraction: 0.8
+    bagging_freq: 1
+    lambda_l2: 1.0
+    max_rounds: 5000
+    early_stopping_rounds: 200
+
+artifacts: artifacts/eval
+report_dir: docs/reports
+report_name: phase1_baselines

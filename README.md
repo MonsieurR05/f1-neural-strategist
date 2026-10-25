@@ -4,9 +4,10 @@ An interactive Formula 1 race-strategy simulator and decision-support tool. A
 neural lap-time model, trained on real timing data, drives a Monte Carlo race
 simulator that evaluates pit strategies and explains why one beats another.
 
-> Status: early development. Phase 0 (data pipeline and exploration) is complete; next is
-> phase 1, the evaluation harness and baselines. See [docs/DESIGN.md](docs/DESIGN.md) for the
-> full design.
+> Status: early development. Phases 0–1 are complete: data pipeline, exploration, and an
+> evaluation harness with three non-neural baselines
+> ([validation report](docs/reports/phase1_baselines_val.md)). Next is phase 2, the neural
+> lap-time model. See [docs/DESIGN.md](docs/DESIGN.md) for the full design.
 
 ![Bahrain tyre degradation by compound and season](docs/figures/bahrain_degradation.png)
 
@@ -60,6 +61,15 @@ python -m strategist.data.clean --config configs/data.yaml
 This writes `data/processed/laps.parquet` (every lap, with features and an
 `exclude_reason`) and `data/processed/races.parquet`. See
 [docs/DESIGN.md §3](docs/DESIGN.md) for sources, cleaning rules and validation.
+
+Evaluate the lap-time models on the validation season (writes
+`docs/reports/phase1_baselines_val.md`):
+
+```bash
+python -m strategist.eval.run --config configs/eval.yaml
+```
+
+The test season is reserved for the final comparison and needs `--split test --final`.
 
 ## Disclaimer
 

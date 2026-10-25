@@ -70,13 +70,16 @@ def add_intervals(laps: pd.DataFrame) -> pd.DataFrame:
 
 
 def add_quali_prior(laps: pd.DataFrame, quali: pd.DataFrame) -> pd.DataFrame:
-    """Qualifying gap to pole in percent: a pace prior known before the race starts."""
+    """Pace priors known before the race starts: the driver's best qualifying lap, the pole
+    time (anchors the circuit/season pace level) and the gap to pole in percent."""
     if quali.empty:
-        laps["quali_gap_pct"] = np.nan
+        laps["quali_best_s"] = laps["quali_pole_s"] = laps["quali_gap_pct"] = np.nan
         return laps
-    pole = quali["QualiBestS"].min()
-    gap = (quali.set_index("Driver")["QualiBestS"] / pole - 1.0) * 100.0
-    laps["quali_gap_pct"] = laps["driver"].map(gap)
+    best = quali.set_index("Driver")["QualiBestS"]
+    pole = best.min()
+    laps["quali_best_s"] = laps["driver"].map(best)
+    laps["quali_pole_s"] = pole
+    laps["quali_gap_pct"] = (laps["quali_best_s"] / pole - 1.0) * 100.0
     return laps
 
 
@@ -179,6 +182,14 @@ def build_race(race_path: Path, cfg: dict) -> tuple[pd.DataFrame, dict]:
         damp_window_laps=cleaning["damp_window_laps"],
     )
 
+    # In dry conditions no race lap (heavy fuel, race tyres) beats the pole time. If one does,
+    # qualifying ran in different conditions (usually wet) and the qualifying pace prior is
+    # unrepresentative. A data-quality flag computed from race laps: never a model input.
+    clean_times = laps.loc[laps["exclude_reason"].isna(), "lap_time_s"]
+    pole = laps["quali_pole_s"].iat[0] if len(laps) else np.nan
+    quali_ok = bool(pd.isna(pole) or clean_times.empty or clean_times.min() >= pole)
+    laps["quali_representative"] = quali_ok
+
     race = {
         "race_id": race_id,
         "year": meta["year"],
@@ -191,6 +202,7 @@ def build_race(race_path: Path, cfg: dict) -> tuple[pd.DataFrame, dict]:
         "total_laps": total_laps,
         "laps_completed": meta["laps_completed"],
         "wet": wet,
+        "quali_representative": quali_ok,
         "n_laps": len(laps),
         "n_clean": int(laps["exclude_reason"].isna().sum()),
     }
