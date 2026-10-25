@@ -8,7 +8,15 @@ split:                  # by season, never by random laps
   val: [2024]
   test: [2025]
 
-focus_circuit: Bahrain  # simulation and UI scope for the MVP
+focus_circuit: Sakhir   # Bahrain International Circuit (grand prix layout); MVP sim/UI scope
+
+cleaning:
+  neutralised_track_status: ["4", "5", "6", "7"]  # SC, red flag, VSC, VSC ending
+  slow_outlier_ratio: 1.07                        # vs the race's median clean lap
+
+# Circuit key = FastF1 location unless aliased here (by event name or location).
+circuit_aliases:
+  Sakhir Grand Prix: Sakhir Outer   # 2020, outer layout: different track, not Bahrain GP
 
 paths:
   fastf1_cache: data/cache

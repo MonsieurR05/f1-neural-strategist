@@ -113,6 +113,10 @@ Carlo: Spearman ρ, top-1 agreement, latency speed-up.
   shifts (2022 rules reset, upgrades) absorbed by team-season embeddings + quali
   prior; observed degradation includes deliberate tyre management.
 - **Ingestion is offline only.** FastF1 is never called at request time.
+- **Access (checked 2026-10-25):** livetiming.formula1.com now returns 401 without an
+  F1 TV sign-in (FastF1 3.9 supports `F1_USERNAME`/`F1_PASSWORD`). Without it FastF1
+  falls back to its community mirror, which covers **2021–2022 only** (44/44 races;
+  0 for 2019–2020 and 2023–2025).
 
 **Why Bahrain:** always dry (night race), high degradation, varied strategies
 (1–3 stops), overtaking is possible, on the calendar every season.
