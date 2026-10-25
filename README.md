@@ -4,8 +4,15 @@ An interactive Formula 1 race-strategy simulator and decision-support tool. A
 neural lap-time model, trained on real timing data, drives a Monte Carlo race
 simulator that evaluates pit strategies and explains why one beats another.
 
-> Status: early development (phase 0: data ingestion and exploration).
-> See [docs/DESIGN.md](docs/DESIGN.md) for the full design.
+> Status: early development. Phase 0 (data pipeline and exploration) is complete; next is
+> phase 1, the evaluation harness and baselines. See [docs/DESIGN.md](docs/DESIGN.md) for the
+> full design.
+
+![Bahrain tyre degradation by compound and season](docs/figures/bahrain_degradation.png)
+
+*Fuel- and pace-corrected tyre degradation at Bahrain, 2021–2025. From
+[notebooks/01_bahrain_eda.ipynb](notebooks/01_bahrain_eda.ipynb), which also covers the fuel
+effect, the cost of running in traffic, and a data-quality summary.*
 
 ## How it works
 

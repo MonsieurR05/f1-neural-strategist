@@ -245,3 +245,4 @@ docs/                  design, model card, evaluation reports
 | 2026-10-25 | No database in MVP (Parquet + DuckDB) |
 | 2026-10-25 | Monorepo on GitHub, private until MVP is presentable |
 | 2026-10-25 | No F1 TV: seasons narrowed to 2021–2025 (FastF1 mirror 2021–22, OpenF1 2023–25); split train 2021–23 / val 2024 / test 2025 |
+| 2026-10-25 | Phase 0 findings (`notebooks/01_bahrain_eda.ipynb`): fuel 0.06–0.08 s/lap; Bahrain deg ~linear 0.10–0.18 s/lap up to ~30 laps; compound offsets unidentifiable per race (CI 0.6–2.6 s) → pool across races; traffic +0.31 s within 0.5 s overall but ~+0.05 s at Bahrain → traffic term takes circuit. Before phase 2: build the C1–C5 compound table; flag stints beyond observed tyre ages as extrapolation in the UI |
