@@ -6,6 +6,12 @@ model_tag: 2021-2023          # lap_net_<tag>.pt and sim_params_<tag>.json (pyth
 threads: 8
 cors_origins: ["http://localhost:3000"]
 
+limits:                       # per client IP per hour, and concurrent heavy jobs (0 = no quota)
+  simulate_per_hour: 120
+  optimise_per_hour: 12
+  concurrent_simulate: 2
+  concurrent_optimise: 1
+
 simulate:
   default_runs: 300
   max_runs: 1000

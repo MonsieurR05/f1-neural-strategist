@@ -1,0 +1,27 @@
+# Public deployment profile (the container sets F1S_API_CONFIG to this file). Lighter optimiser
+# settings than configs/api.yaml so a run takes ~40 s on a 2-vCPU machine, and quotas so one
+# visitor can't monopolise it. Allowed origins come from F1S_CORS_ORIGINS.
+data_config: configs/data.yaml
+model_dir: artifacts/models
+model_tag: 2021-2023
+threads: 2
+cors_origins: []
+
+limits:
+  simulate_per_hour: 60
+  optimise_per_hour: 8
+  concurrent_simulate: 2
+  concurrent_optimise: 1
+
+simulate:
+  default_runs: 300
+  max_runs: 500
+
+optimise:
+  max_stops: 2
+  pit_step: 2
+  min_stint: 6
+  screen_runs: 12
+  refine_runs: 200
+  max_refine_runs: 300
+  refine_top: 6

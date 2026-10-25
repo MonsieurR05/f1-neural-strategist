@@ -5,13 +5,15 @@ Run from the repository root:
     uvicorn app.main:app --app-dir services/api --reload
 
 Configuration: ``configs/api.yaml`` (override with ``F1S_API_CONFIG``). Model artifacts are
-built by ``python -m strategist.sim.backtest``.
+built by ``python -m strategist.sim.backtest``. In a container, ``F1S_CORS_ORIGINS``
+(comma-separated) sets the allowed frontend origins and ``F1S_THREADS`` the torch threads.
 """
 
+import os
 from contextlib import asynccontextmanager
 
 import numpy as np
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.schemas import (
@@ -29,6 +31,7 @@ from app.schemas import (
     StrategyResult,
     Track,
 )
+from app.limits import Limiter
 from app.state import MODEL_CAVEATS, AppState, config_path, finite_or_none
 from strategist.config import load_config
 from strategist.optimise.search import SearchConfig, optimise, split_at
@@ -45,9 +48,15 @@ def create_app(config: str | None = None) -> FastAPI:
         yield
 
     app = FastAPI(title="F1 Neural Race Strategist API", version="0.1.0", lifespan=lifespan)
-    origins = load_config(config or config_path()).get("cors_origins", [])
-    app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST"],
-                       allow_headers=["*"])
+    cfg = load_config(config or config_path())
+    env_origins = [o.strip() for o in os.environ.get("F1S_CORS_ORIGINS", "").split(",") if o.strip()]
+    app.add_middleware(CORSMiddleware, allow_origins=env_origins or cfg.get("cors_origins", []),
+                       allow_methods=["GET", "POST"], allow_headers=["*"])
+    lim = cfg.get("limits", {})
+    limiter = Limiter(per_hour={"simulate": lim.get("simulate_per_hour", 0),
+                                "optimise": lim.get("optimise_per_hour", 0)},
+                      concurrent={"simulate": lim.get("concurrent_simulate", 4),
+                                  "optimise": lim.get("concurrent_optimise", 1)})
 
     def st() -> AppState:
         return state["s"]
@@ -148,8 +157,13 @@ def create_app(config: str | None = None) -> FastAPI:
             car.strategy = new
 
     @app.post("/simulate", response_model=SimulateResponse)
-    def simulate(req: SimulateRequest) -> SimulateResponse:
+    def simulate(req: SimulateRequest, request: Request) -> SimulateResponse:
         require_simulatable(req.race_id)
+        limiter.check(request, "simulate")
+        with limiter.slot("simulate"):
+            return run_simulation(req)
+
+    def run_simulation(req: SimulateRequest) -> SimulateResponse:
         cfg = st().cfg["simulate"]
         runs = min(req.runs or cfg["default_runs"], cfg["max_runs"])
         setup, _ = st().setup(req.race_id, req.start_lap)
@@ -184,8 +198,13 @@ def create_app(config: str | None = None) -> FastAPI:
             laps=laps, notes=notes)
 
     @app.post("/optimise", response_model=OptimiseResponse)
-    def optimise_strategy(req: OptimiseRequest) -> OptimiseResponse:
+    def optimise_strategy(req: OptimiseRequest, request: Request) -> OptimiseResponse:
         require_simulatable(req.race_id)
+        limiter.check(request, "optimise")
+        with limiter.slot("optimise"):
+            return run_optimisation(req)
+
+    def run_optimisation(req: OptimiseRequest) -> OptimiseResponse:
         setup, _ = st().setup(req.race_id, req.start_lap)
         if req.driver not in [c.driver for c in setup.cars]:
             raise HTTPException(422, f"{req.driver} is not in this race (or retired on lap {req.start_lap} or earlier)")

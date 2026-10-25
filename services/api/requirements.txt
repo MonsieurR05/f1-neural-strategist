@@ -1,0 +1,12 @@
+# API runtime dependencies (pinned; the container installs these, not the full strategist extras).
+# torch comes from the CPU-only index in the Dockerfile.
+numpy==2.5.4
+pandas==2.3.3
+pyarrow==26.0.0
+PyYAML==6.0.3
+scikit-learn==1.9.1
+scipy==1.18.1
+fastapi==0.162.0
+pydantic==2.14.1
+starlette==1.10.0
+uvicorn==0.54.0

@@ -37,7 +37,7 @@ class AppState:
         self.laps = pd.read_parquet(processed / "laps.parquet")
         self.races = pd.read_parquet(processed / "races.parquet").set_index("race_id")
         model_dir, tag = Path(self.cfg["model_dir"]), self.cfg["model_tag"]
-        torch.set_num_threads(int(self.cfg.get("threads", 4)))
+        torch.set_num_threads(int(os.environ.get("F1S_THREADS", self.cfg.get("threads", 4))))
         self.net = LapTimeNet.load(model_dir / f"lap_net_{tag}.pt")
         self.params = SimParams.load(model_dir / f"sim_params_{tag}.json")
         train_years = data_cfg["split"]["train"]

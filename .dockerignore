@@ -1,0 +1,16 @@
+# Only what the API container needs: packages/strategist, services/api, configs, the processed
+# data, race results and trained models.
+.git
+.venv
+.claude
+**/__pycache__
+**/*.pyc
+apps
+notebooks
+docs
+artifacts/eval
+data/cache
+data/*.log
+data/processed/compound_candidates.csv
+**/node_modules
+**/.next
