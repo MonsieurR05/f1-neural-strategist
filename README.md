@@ -4,10 +4,26 @@ An interactive Formula 1 race-strategy simulator and decision-support tool. A
 neural lap-time model, trained on real timing data, drives a Monte Carlo race
 simulator that evaluates pit strategies and explains why one beats another.
 
-> Status: early development. Phases 0–1 are complete: data pipeline, exploration, and an
-> evaluation harness with three non-neural baselines
-> ([validation report](docs/reports/phase1_baselines_val.md)). Next is phase 2, the neural
-> lap-time model. See [docs/DESIGN.md](docs/DESIGN.md) for the full design.
+> Status: early development. Phases 0–2 are complete: data pipeline, exploration, an
+> evaluation harness with three non-neural baselines, and the structured probabilistic
+> lap-time network ([validation report](docs/reports/lap_time_models_val.md),
+> [model card](docs/MODEL_CARD.md)). Next is phase 3, the race simulator. See
+> [docs/DESIGN.md](docs/DESIGN.md) for the full design.
+
+**Lap-time forecasting on an unseen season (2024 validation, 19,969 laps):**
+
+| Model | Lap-time MAE | Within-race MAE | NLL |
+|---|---|---|---|
+| Circuit pace ratio | 1.166 s | 0.852 s | 1.994 |
+| Fuel-corrected linear degradation | 0.922 s | 0.533 s | 1.775 |
+| LightGBM | 0.927 s | **0.521 s** | 1.850 |
+| **Structured network (ensemble of 5)** | **0.864 s** | 0.527 s | **1.607** |
+
+The network is significantly more accurate than LightGBM on absolute lap time (−0.063 s,
+95% race-bootstrap interval −0.133 to −0.007), ties it on within-race error, gives the best
+calibrated uncertainty, and is best on every metric at Bahrain, the MVP circuit. Its
+degradation curves can never decrease with tyre age, so strategy counterfactuals stay
+physically plausible.
 
 ![Bahrain tyre degradation by compound and season](docs/figures/bahrain_degradation.png)
 
@@ -63,7 +79,7 @@ This writes `data/processed/laps.parquet` (every lap, with features and an
 [docs/DESIGN.md §3](docs/DESIGN.md) for sources, cleaning rules and validation.
 
 Evaluate the lap-time models on the validation season (writes
-`docs/reports/phase1_baselines_val.md`):
+`docs/reports/lap_time_models_val.md`; about a minute on a CPU):
 
 ```bash
 python -m strategist.eval.run --config configs/eval.yaml

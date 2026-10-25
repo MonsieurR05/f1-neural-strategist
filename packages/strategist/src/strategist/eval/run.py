@@ -73,6 +73,39 @@ def breakdown(df: pd.DataFrame, preds: dict[str, pd.DataFrame], by: pd.Series) -
     return pd.DataFrame(rows)
 
 
+def paired_bootstrap(held: pd.DataFrame, preds: dict[str, pd.DataFrame], reference: str,
+                     n: int = 2000, seed: int = 0) -> pd.DataFrame:
+    """95% intervals for (model − reference) on MAE, within-race MAE and NLL, resampling whole
+    races with replacement (laps within a race are strongly correlated, so laps can't be
+    resampled independently)."""
+    y = held["lap_time_s"]
+    race_codes, races = pd.factorize(held["race_id"])
+    per_race = {}
+    for model, p in preds.items():
+        err = y - p["mu"]
+        within = err - err.groupby([held["race_id"], held["driver"]]).transform("mean")
+        z = err / p["sigma"]
+        nll = 0.5 * z**2 + np.log(p["sigma"]) + 0.5 * np.log(2 * np.pi)
+        per_race[model] = np.vstack([np.bincount(race_codes, w.abs().to_numpy() if k < 2 else w.to_numpy())
+                                     for k, w in enumerate([err, within, nll])])
+    laps = np.bincount(race_codes)
+    rng = np.random.default_rng(seed)
+    draws = rng.integers(0, len(races), size=(n, len(races)))
+    counts = np.apply_along_axis(np.bincount, 1, draws, minlength=len(races))
+    rows = []
+    for model in preds:
+        if model == reference:
+            continue
+        diff = per_race[model] - per_race[reference]  # 3 × races
+        stat = (counts @ diff.T) / (counts @ laps)[:, None]  # n × 3
+        point = diff.sum(1) / laps.sum()
+        lo, hi = np.quantile(stat, [0.025, 0.975], axis=0)
+        rows.append({"model": model,
+                     **{f"Δ{m}": f"{p:+.3f} [{a:+.3f}, {b:+.3f}]"
+                        for m, p, a, b in zip(["mae_s", "within_mae_s", "nll"], point, lo, hi)}})
+    return pd.DataFrame(rows)
+
+
 def git_commit() -> str:
     try:
         return subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True,
@@ -130,11 +163,14 @@ def main(argv: list[str] | None = None) -> int:
     preds, metrics, fitted = {}, {}, {}
     for name in models_cfg:
         params = models_cfg[name]
-        log.info("%s: calibrating σ (leave-one-season-out)", name)
-        sigma = calibrate_sigma(name, params, seed, train, cfg["sigma"]["min_circuit_laps"])
         log.info("%s: fitting on all training seasons", name)
         model = make_model(name, params, seed).fit(train)
-        mu, sd = model.predict(held), sigma(held)
+        if hasattr(model, "predict_dist"):  # model predicts its own (per-lap) uncertainty
+            mu, sd = model.predict_dist(held)
+        else:
+            log.info("%s: calibrating σ (leave-one-season-out)", name)
+            sigma = calibrate_sigma(name, params, seed, train, cfg["sigma"]["min_circuit_laps"])
+            mu, sd = model.predict(held), sigma(held)
         preds[name] = pd.DataFrame({"mu": mu, "sigma": sd})
         metrics[name] = evaluate(held, held["lap_time_s"], mu, sd)
         fitted[name] = model
@@ -172,7 +208,7 @@ def render_report(cfg, split_name, split, train, held, seen, preds, metrics, fit
     by_race = breakdown(held, preds, held["race_id"])
 
     lines = [
-        f"# Phase 1 baselines: {split_name} season ({', '.join(map(str, split[split_name]))})",
+        f"# Lap-time models: {split_name} season ({', '.join(map(str, split[split_name]))})",
         "",
         f"_Generated {datetime.now(UTC):%Y-%m-%d %H:%M} UTC from commit `{git_commit()}` by "
         "`python -m strategist.eval.run`. Do not edit by hand._",
@@ -198,6 +234,19 @@ def render_report(cfg, split_name, split, train, held, seen, preds, metrics, fit
         "",
         md_table(overall),
         "",
+    ]
+    reference = cfg.get("bootstrap_reference")
+    if reference in preds and len(preds) > 1:
+        lines += [
+            f"### Differences vs `{reference}` (95% race-level paired bootstrap)",
+            "",
+            "Negative = better than the reference. An interval spanning 0 means the difference "
+            "is within race-to-race noise for this season.",
+            "",
+            md_table(paired_bootstrap(held, preds, reference)),
+            "",
+        ]
+    lines += [
         "## Seen vs unseen circuits",
         "",
         "Circuits with no clean training laps: "
@@ -268,6 +317,9 @@ def render_report(cfg, split_name, split, train, held, seen, preds, metrics, fit
             "",
         ]
 
+    if "lap_net" in fitted:
+        lines += lap_net_section(fitted["lap_net"], train, focus)
+
     if LightGBMLapTime.name in fitted:
         lgbm = fitted[LightGBMLapTime.name]
         gain = pd.Series(lgbm.booster.feature_importance("gain"), index=lgbm.FEATURES)
@@ -281,6 +333,36 @@ def render_report(cfg, split_name, split, train, held, seen, preds, metrics, fit
             "",
         ]
     return "\n".join(lines)
+
+
+def lap_net_section(net, train: pd.DataFrame, circuit: str) -> list[str]:
+    """Learned fuel effect and degradation curves at one circuit, in seconds."""
+    ref = train[train["circuit"] == circuit]
+    if ref.empty:
+        return []
+    typical = ref.median(numeric_only=True)
+    ages = [1, 5, 10, 15, 20, 25, 30, 35, 40]
+    rows = []
+    for compound in ("SOFT", "MEDIUM", "HARD"):
+        probe = pd.DataFrame([{**typical.to_dict(), "circuit": circuit, "compound": compound,
+                               "tyre_life": float(a), "fresh_tyre": 1.0} for a in ages])
+        deg = net.components(probe)["deg"].to_numpy()
+        rows.append({"compound": compound, **{f"age {a}": d - deg[0] for a, d in zip(ages, deg)}})
+    probe = pd.DataFrame([{**typical.to_dict(), "circuit": circuit, "laps_remaining": lr}
+                          for lr in (0.0, 10.0)]).assign(compound="MEDIUM")
+    fuel = net.components(probe)["fuel"].diff().iat[-1] / 10.0
+    seen_max = int(ref["tyre_life"].max())
+    return [
+        f"## `lap_net` at {circuit}, in seconds",
+        "",
+        f"Fuel effect: {fuel:.3f} s per lap of fuel on board. Degradation relative to a "
+        f"1-lap-old tyre (median conditions). Training data at {circuit} reaches {seen_max} laps "
+        "of tyre age; beyond that the curve is extrapolated by construction (non-decreasing, "
+        "convex).",
+        "",
+        md_table(pd.DataFrame(rows), ".2f"),
+        "",
+    ]
 
 
 if __name__ == "__main__":

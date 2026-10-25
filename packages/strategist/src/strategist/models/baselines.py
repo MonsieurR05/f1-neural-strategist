@@ -183,4 +183,7 @@ def make_model(name: str, params: dict | None = None, seed: int = 42) -> LapTime
         offset = params.pop("circuit_offset", False)
         return LightGBMLapTime(params, max_rounds, stop, seed=seed, drop_features=drop,
                                circuit_offset=offset)
+    if name == "lap_net":
+        from strategist.models.lapnet import LapTimeNet
+        return LapTimeNet(**params, seed=seed)
     raise ValueError(f"unknown model {name!r}")
