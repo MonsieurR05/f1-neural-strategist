@@ -1,0 +1,18 @@
+# Data scope for ingestion and lap-time model training. See docs/DESIGN.md §3.
+seasons: [2019, 2020, 2021, 2022, 2023, 2024, 2025]
+session: R              # races only
+dry_only: true
+
+split:                  # by season, never by random laps
+  train: [2019, 2020, 2021, 2022, 2023]
+  val: [2024]
+  test: [2025]
+
+focus_circuit: Bahrain  # simulation and UI scope for the MVP
+
+paths:
+  fastf1_cache: data/cache
+  raw: data/raw
+  processed: data/processed
+
+seed: 42

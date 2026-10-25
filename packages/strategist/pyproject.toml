@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "strategist"
+version = "0.1.0"
+description = "Core of the F1 Neural Race Strategist: data pipeline, lap-time models, race simulator and strategy optimiser."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastf1>=3.4",
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "pyarrow>=15",
+    "duckdb>=1.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+ml = [
+    "torch>=2.6",
+    "lightgbm>=4.3",
+    "scikit-learn>=1.5",
+    "onnxruntime>=1.19",
+]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "jupyterlab>=4.2",
+    "matplotlib>=3.9",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/strategist"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
