@@ -36,3 +36,6 @@ Thumbs.db
 
 # Local editor/agent settings (machine-specific paths)
 /.claude/
+
+# Vercel CLI project link (created by vercel deploy)
+.vercel
