@@ -74,7 +74,7 @@ conditions) and the simulator composes them into counterfactuals.
   stint degradation-slope error, error on long-stint extrapolation slices.
 
 - **Split:** by season, never random laps. Train 2021–2023 · validate 2024 ·
-  test 2025.
+  test 2025 (used once; for it, models are refitted on 2021–2024).
 
 - **v2 — GRU in-race adaptation:** condition on the laps already run in the current
   stint to infer today's degradation. Test: predict the rest of a stint from its
