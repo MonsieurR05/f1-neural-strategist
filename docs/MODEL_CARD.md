@@ -1,8 +1,9 @@
 # Model card: structured probabilistic lap-time network (`lap_net`)
 
 Code: `packages/strategist/src/strategist/models/lapnet.py` · Config: `configs/eval.yaml` ·
-Evaluation: `docs/reports/lap_time_models_val.md` (generated; the source of truth for numbers).
-Figures below are from the 2024 validation run of 2026-10-25.
+Evaluation: `docs/reports/lap_time_models_test.md` (final, 2025) and
+`docs/reports/lap_time_models_val.md` (development, 2024); generated, the source of truth for
+numbers. Figures below are from the runs of 2026-10-26.
 
 ## Purpose
 
@@ -63,10 +64,53 @@ a Gaussian mixture.
   23 circuits.
 - Mean: Huber loss, AdamW. Epoch count chosen by within-race MAE on 2023 when fitting on
   2021–22, then all models refitted on 2021–23.
-- Validation: 2024 (19,969 laps, 20 races). Test: 2025, **not yet used**; it is reserved for
-  the final model comparison.
+- Validation: 2024 (19,969 laps, 20 races), used during development.
+- Test: 2025 (19,959 laps, 20 races), **used once** for the final comparison. Every model was
+  refitted on 2021–2024 with the settings fixed during development; the rule above picked 4
+  epochs (early stopping on 2024 when fitting 2021–23), against 21 for the validation-era
+  model. Nothing was tuned on 2025.
+- The deployed app serves the 2021–2023 model (the one validated on 2024).
 
-## Results (2024 validation)
+## Results (2025 test, final)
+
+| Metric | lap_net | LightGBM | Linear deg (analyst) |
+|---|---|---|---|
+| Lap-time MAE | **0.900 s** | 0.986 s | 1.085 s |
+| Within-race MAE (strategy-relevant) | **0.491 s** | 0.533 s | 0.512 s |
+| Gaussian NLL | **1.625** | 1.865 | 1.970 |
+| 90% interval coverage | 0.862 | 0.879 | 0.870 |
+| Seen circuits: MAE / within-race MAE | **0.859 / 0.494 s** | 0.994 / 0.539 s | 1.083 / 0.518 s |
+| Unseen circuit (Montréal): MAE / within-race MAE | 1.552 / 0.439 s | **0.863** / 0.446 s | 1.122 / **0.416** s |
+| Bahrain MAE / within-race MAE | **0.603 / 0.449 s** | 0.634 / 0.471 s | 0.700 / 0.513 s |
+| Bahrain stint-slope skill | −0.08 | −0.19 | **+0.12** |
+
+Against LightGBM, race-level paired bootstrap (95%): within-race MAE −0.042 s [−0.068, −0.017],
+the one difference that clears race-to-race noise; MAE −0.086 s [−0.262, +0.075] and NLL
+−0.240 [−0.718, +0.081] favour the network but are not significant. Across both held-out
+seasons: tied on 2024, ahead on within-race error on 2025.
+
+What the test exposed:
+
+- **Intervals are too narrow on a new season:** 86% of 2025 laps fall in the 90% interval
+  (89% for LightGBM, 87% for the linear model). The σ head learns from leave-one-season-out
+  residuals of 2021–24, and 2025 was a less predictable season than those.
+- **Unseen-circuit pace level:** at Montréal (no clean training laps) the network's absolute
+  error is the worst of all four models, while its within-race error is normal. The "unknown"
+  embedding gets the shape of a race right but not its pace level relative to qualifying.
+- **Race-level offsets dominate the largest errors:** Suzuka (MAE 1.91 s, within-race 0.37 s)
+  and Monza (1.47 / 0.48 s) are offsets between qualifying and race pace, not degradation
+  errors. Monaco is the exception (within-race 1.16 s): 2025's mandatory two stops led
+  teams to run deliberately slowly to build pit windows for team-mates, race tactics the
+  model has no input for.
+- **Bahrain degradation** is still not predictable per stint (skill −0.08); only the
+  linear analyst model is positive there.
+
+Learned 2025 Bahrain behaviour (2021–2024 model, median conditions; hard C1, medium C2, soft
+C3): degradation after 20 laps hard 1.2 s, medium 1.3 s, soft 1.5 s; fuel 0.067 s per lap of
+fuel. Simulator backtest on the 2025 race (held out): position MAE 2.22 against 1.78 for the
+frozen lap-1 order, 80% coverage 0.83, P(actual winner) 0.74 (`docs/reports/sim_backtest_test.md`).
+
+## Results (2024 validation, development)
 
 | Metric | lap_net | LightGBM | Linear deg (analyst) |
 |---|---|---|---|
@@ -100,9 +144,12 @@ plan.
   stint-slope skill is ≤ 0 for every model, this one included: drivers manage tyres to plan,
   so a stint's degradation is driver- and stint-specific. Planned fix: in-race adaptation
   (a sequence model conditioned on the laps already run).
-- **Unseen circuits are weaker** (within-race MAE 0.585 s vs 0.520 s on seen circuits). The
-  "unknown" embedding is a weak prior; circuit descriptors (length, corners, speed) would
-  generalise better.
+- **Unseen circuits are weaker.** On 2024 the within-race error was higher (0.585 s vs
+  0.520 s); on 2025 the within-race error was fine but the absolute pace level at Montréal was
+  off (MAE 1.55 s, worst of all models). The "unknown" embedding is a weak prior; circuit
+  descriptors (length, corners, speed) would generalise better.
+- **Uncertainty is overconfident on a new season** (2025 coverage 0.86 at the 90% level). A
+  season-level variance term, or widening σ by the season-to-season spread, would fix it.
 - **Beyond observed tyre ages** (about 30 laps at Bahrain) the degradation curve is an
   extrapolation: monotone and convex by construction, not validated by data. The simulator
   should flag such stints.
@@ -117,4 +164,5 @@ plan.
   races, all in the test season). Nominations come from Wikipedia race articles (112 of 114
   parsed; 2 resolved from F1/Pirelli previews; 18 cross-checked against F1/Pirelli, all agree).
 - One validation-driven change was made (the identifiability rule above); everything else was
-  chosen on the inner split. The sealed 2025 test season will give the unbiased estimate.
+  chosen on the inner split. The 2025 test results above are the unbiased estimate; any change
+  made after them would need a new held-out season (2026) to be assessed fairly.

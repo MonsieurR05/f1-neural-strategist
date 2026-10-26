@@ -11,40 +11,61 @@ seconds longer.
 
 > Status: phases 0–5 are complete and deployed: data pipeline, exploration, an evaluation
 > harness with three non-neural baselines, the structured probabilistic lap-time network
-> ([validation report](docs/reports/lap_time_models_val.md), [model card](docs/MODEL_CARD.md)),
-> the Monte Carlo race simulator ([backtest](docs/reports/sim_backtest_val.md)), the strategy
-> optimiser behind a FastAPI service ([API](services/api/README.md)), and the Next.js web app
-> ([web](apps/web/README.md)). Next: the fast strategy surrogate and in-race "pit wall" mode.
+> ([model card](docs/MODEL_CARD.md)), the Monte Carlo race simulator, the strategy optimiser
+> behind a FastAPI service ([API](services/api/README.md)), and the Next.js web app
+> ([web](apps/web/README.md)). The sealed 2025 test season has been used for the final
+> evaluation (results below). Next: the fast strategy surrogate and in-race "pit wall" mode.
 > See [docs/DESIGN.md](docs/DESIGN.md) for the full design.
 
-**Lap-time forecasting on an unseen season (2024 validation, 19,969 laps):**
+**Final test: lap-time forecasting on the sealed 2025 season** (19,959 laps, 20 dry races;
+models refitted on 2021–2024 with the settings fixed during development, scored once;
+[report](docs/reports/lap_time_models_test.md)):
 
-| Model | Lap-time MAE | Within-race MAE | NLL |
-|---|---|---|---|
-| Circuit pace ratio | 1.166 s | 0.852 s | 1.994 |
-| Fuel-corrected linear degradation | 0.922 s | 0.533 s | 1.775 |
-| LightGBM | **0.915 s** | **0.519 s** | 1.831 |
-| **Structured network (ensemble of 5)** | 0.916 s | 0.538 s | **1.660** |
+| Model | Lap-time MAE | Within-race MAE | NLL | 90% coverage |
+|---|---|---|---|---|
+| Circuit pace ratio | 1.175 s | 0.832 s | 1.901 | 0.90 |
+| Fuel-corrected linear degradation | 1.085 s | 0.512 s | 1.970 | 0.87 |
+| LightGBM | 0.986 s | 0.533 s | 1.865 | 0.88 |
+| **Structured network (ensemble of 5)** | **0.900 s** | **0.491 s** | **1.625** | 0.86 |
+
+The network is best on every accuracy and likelihood metric. Against LightGBM (95%
+race-level paired bootstrap) its within-race error is lower by 0.042 s [0.017, 0.068], the
+strategy-relevant gain; the overall MAE gain (−0.086 s [−0.262, +0.075]) and NLL gain are not
+distinguishable from race-to-race noise. Where it falls short: its 90% intervals cover only
+86% of 2025 laps (every model under-covers), and at the one circuit it had never seen
+(Montréal) its absolute error is the worst of the four (1.55 s; the within-race error is
+fine), so the "unknown circuit" fallback misplaces the pace level. On the 2024 validation
+season the network and LightGBM were tied ([validation report](docs/reports/lap_time_models_val.md)).
 
 Both models know which Pirelli compound (C0–C6) each tyre was: soft/medium/hard mean
 different rubber at different races (the Bahrain soft was the C4 in 2021, the C3 since), so
 the dataset carries a per-race nomination table ([configs/compounds.csv](configs/compounds.csv),
-114 races, compiled from race articles and cross-checked against F1/Pirelli previews). On a
-single held-out season the network and LightGBM are statistically tied on lap-time error
-(race-bootstrap interval ±0.04 s); the network has the best-calibrated uncertainty and, at
-Bahrain, the lowest within-race error (0.333 s) and the only positive stint-slope skill. Unlike
-the baselines it is physically constrained: predictions never get faster as tyres age, and a
-softer compound is never slower when fresh nor wears less, at any circuit. Those guarantees
-are what make its strategy counterfactuals trustworthy.
+114 races, compiled from race articles and cross-checked against F1/Pirelli previews). Unlike
+the baselines the network is physically constrained: predictions never get faster as tyres
+age, and a softer compound is never slower when fresh nor wears less, at any circuit. Those
+guarantees are what make its strategy counterfactuals trustworthy.
 
-**Race simulator backtest (2024 Bahrain GP, held out, 500 runs):** replayed from the order
-after lap 1 with the strategies actually used, the simulator's median finishing positions
-are off by 2.10 places on average (frozen lap-1 order 2.30, grid order 2.30), with rank
-correlation 0.88 and 90% of drivers inside the simulated 80% range. Asked to re-optimise
-Verstappen's race, the optimiser rates his actual soft–hard–soft as within about a second of
-the best plan, i.e. near-optimal, as the result suggests.
+**Race simulator backtest (Bahrain, held out, 500 runs each):** each race is replayed from
+the order after lap 1 with the strategies actually used.
 
-![Simulated vs actual finishing positions, 2024 Bahrain GP](docs/figures/sim_backtest_2024_01.png)
+| Held-out race | Simulator position MAE | Frozen lap-1 order | Grid order | Rank correlation | Inside simulated 80% range | P(actual winner) |
+|---|---|---|---|---|---|---|
+| 2024 (validation) | **2.10** | 2.30 | 2.30 | 0.88 | 90% | 0.52 |
+| 2025 (final test) | 2.22 | **1.78** | 2.78 | 0.81 | 83% | 0.74 |
+
+On 2025 the simulator's spread is well calibrated and it gives the actual winner (Piastri)
+a 74% chance, but its median positions are worse than simply freezing the lap-1 order: it
+underrates the Haas pair (8th and 10th, simulated 15th; race pace better than their
+qualifying anchor) and overrates Antonelli. Two held-out races can't separate the simulator
+from the lap-1 baseline; positions in midfield remain the weak point
+([test backtest](docs/reports/sim_backtest_test.md),
+[validation backtest](docs/reports/sim_backtest_val.md)). Asked to re-optimise Verstappen's
+2024 race, the optimiser rates his actual soft–hard–soft as within about a second of the
+best plan, i.e. near-optimal, as the result suggests.
+
+The live app serves the models fitted on 2021–2023 (the ones validated on 2024).
+
+![Simulated vs actual finishing positions, 2025 Bahrain GP](docs/figures/sim_backtest_2025_04.png)
 
 ![Bahrain tyre degradation by compound and season](docs/figures/bahrain_degradation.png)
 
@@ -71,8 +92,8 @@ presented as fact.
 | Path | Contents |
 |---|---|
 | `packages/strategist/` | Python core: data pipeline, models, simulator, optimiser, evaluation |
-| `services/api/` | FastAPI service (planned) |
-| `apps/web/` | Next.js frontend (planned) |
+| `services/api/` | FastAPI service |
+| `apps/web/` | Next.js frontend |
 | `configs/` | Experiment and data configs |
 | `notebooks/` | Exploration only |
 | `docs/` | Design, model card, evaluation reports |
@@ -106,14 +127,16 @@ Evaluate the lap-time models on the validation season (writes
 python -m strategist.eval.run --config configs/eval.yaml
 ```
 
-The test season is reserved for the final comparison and needs `--split test --final`.
-
 Backtest the race simulator on Bahrain (trains and caches lap_net and the simulator
 parameters under `artifacts/models/` on first run; writes `docs/reports/sim_backtest_val.md`):
 
 ```bash
 python -m strategist.sim.backtest --config configs/sim.yaml
 ```
+
+The 2025 test season has been used once for the final evaluation. Both commands accept
+`--split test --final`, which refits on 2021–2024 and writes the `_test` reports; it exists
+to reproduce those numbers, not to compare new variants.
 
 Serve the strategy API (races, simulation, optimisation; docs at `/docs`):
 

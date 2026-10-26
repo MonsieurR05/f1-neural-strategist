@@ -26,7 +26,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from strategist.config import load_config
+from strategist.config import load_config, training_seasons
 from strategist.eval.metrics import evaluate, within_mae
 from strategist.models.baselines import FuelDegLinear, LightGBMLapTime, make_model
 from strategist.models.features import clean_laps, prepare
@@ -146,7 +146,7 @@ def main(argv: list[str] | None = None) -> int:
     cfg = load_config(args.config)
     data_cfg = load_config(cfg["data_config"])
     seed, models_cfg = cfg["seed"], cfg["models"]
-    split = data_cfg["split"]
+    split = {**data_cfg["split"], "train": training_seasons(data_cfg["split"], args.split)}
     processed = Path(data_cfg["paths"]["processed"])
 
     races = pd.read_parquet(processed / "races.parquet")
@@ -219,6 +219,9 @@ def render_report(cfg, split_name, split, train, held, seen, preds, metrics, fit
         f"({len(train):,} laps); scored on {len(held):,} laps across "
         f"{held['race_id'].nunique()} races.",
         "",
+        *([("**Final test.** Scored once. Models were refitted on every pre-test season with the "
+            "settings fixed during development on the validation season; nothing was tuned on "
+            "this season."), ""] if split_name == "test" else []),
         "Excluded because qualifying was unrepresentative of race conditions (a race lap beat "
         f"pole; usually wet qualifying): {', '.join(excluded) or 'none'}.",
         "",
@@ -343,9 +346,13 @@ def lap_net_section(net, train: pd.DataFrame, circuit: str) -> list[str]:
     typical = ref.median(numeric_only=True)
     ages = [1, 5, 10, 15, 20, 25, 30, 35, 40]
     rows = []
+    # Each compound at the hardness nominated for the latest training race here (a lap-weighted
+    # median would mix seasons: e.g. Sakhir's medium was the C3 in 2021, the C2 since).
+    latest = ref[ref["year"] == ref["year"].max()].iloc[0]
     for compound in ("SOFT", "MEDIUM", "HARD"):
         probe = pd.DataFrame([{**typical.to_dict(), "circuit": circuit, "compound": compound,
-                               "tyre_life": float(a), "fresh_tyre": 1.0} for a in ages])
+                               "hardness": latest[f"h_{compound}"], "tyre_life": float(a),
+                               "fresh_tyre": 1.0} for a in ages])
         deg = net.components(probe)["deg"].to_numpy()
         rows.append({"compound": compound, **{f"age {a}": d - deg[0] for a, d in zip(ages, deg)}})
     probe = pd.DataFrame([{**typical.to_dict(), "circuit": circuit, "laps_remaining": lr}
@@ -356,7 +363,9 @@ def lap_net_section(net, train: pd.DataFrame, circuit: str) -> list[str]:
         f"## `lap_net` at {circuit}, in seconds",
         "",
         f"Fuel effect: {fuel:.3f} s per lap of fuel on board. Degradation relative to a "
-        f"1-lap-old tyre (median conditions). Training data at {circuit} reaches {seen_max} laps "
+        f"1-lap-old tyre (median conditions; compounds as nominated for {circuit} "
+        f"{int(latest['year'])}: hard {latest['h_HARD']:g}, medium {latest['h_MEDIUM']:g}, "
+        f"soft {latest['h_SOFT']:g} on the hardness scale). Training data at {circuit} reaches {seen_max} laps "
         "of tyre age; beyond that the curve is extrapolated by construction (non-decreasing, "
         "convex).",
         "",

@@ -32,7 +32,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
 
-from strategist.config import load_config
+from strategist.config import load_config, training_seasons
 from strategist.eval.run import md_table
 from strategist.models.features import clean_laps, prepare
 from strategist.models.lapnet import LapTimeNet
@@ -46,9 +46,8 @@ import matplotlib.pyplot as plt  # noqa: E402
 log = logging.getLogger(__name__)
 
 
-def fitted_models(cfg, data_cfg, eval_cfg, laps_raw, races):
-    """lap_net and simulator parameters fitted on the training seasons (cached)."""
-    train_years = data_cfg["split"]["train"]
+def fitted_models(cfg, eval_cfg, laps_raw, races, train_years: list[int]):
+    """lap_net and simulator parameters fitted on ``train_years`` (cached per season range)."""
     tag = f"{min(train_years)}-{max(train_years)}"
     model_dir = Path(cfg["model_dir"])
     model_dir.mkdir(parents=True, exist_ok=True)
@@ -146,9 +145,9 @@ def main(argv: list[str] | None = None) -> int:
     processed = Path(data_cfg["paths"]["processed"])
     laps_raw = pd.read_parquet(processed / "laps.parquet")
     races = pd.read_parquet(processed / "races.parquet")
-    net, params = fitted_models(cfg, data_cfg, eval_cfg, laps_raw, races)
+    split = {**data_cfg["split"], "train": training_seasons(data_cfg["split"], args.split)}
+    net, params = fitted_models(cfg, eval_cfg, laps_raw, races, split["train"])
 
-    split = data_cfg["split"]
     years = split["train"] + split[args.split]
     targets = races[(races["circuit"] == cfg["circuit"]) & races["year"].isin(years) & ~races["wet"]]
     rows, figure = [], None
@@ -178,14 +177,14 @@ def main(argv: list[str] | None = None) -> int:
             held_name = f"{race.event_name} {race.year}"
 
     scores = pd.DataFrame(rows)
-    report = render(cfg, args.split, params, scores, figure, held_table, held_name)
+    report = render(cfg, args.split, params, scores, figure, held_table, held_name, split["train"])
     path = Path(cfg["report_dir"]) / f"sim_backtest_{args.split}.md"
     path.write_text(report, encoding="utf-8")
     log.info("wrote %s", path)
     return 0
 
 
-def render(cfg, split, params, scores, figure, held_table, held_name) -> str:
+def render(cfg, split, params, scores, figure, held_table, held_name, train_years) -> str:
     try:
         commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True,
                                 text=True, check=True).stdout.strip()
@@ -209,7 +208,7 @@ def render(cfg, split, params, scores, figure, held_table, held_name) -> str:
         "**Setup.** Each race is replayed from the actual order and gaps after lap 1 with the "
         "strategies, safety-car/VSC laps and retirements that actually happened, "
         f"{cfg['runs']} Monte Carlo runs. Lap-time network and simulator parameters are fitted on "
-        "the training seasons only; training-season races are in-sample, the evaluation season "
+        f"{min(train_years)}–{max(train_years)} only; races from those seasons are in-sample, the evaluation season "
         f"({split}) is held out. Actual order is road order at the line (official results include "
         "post-race penalties).",
         "",
@@ -230,7 +229,7 @@ def render(cfg, split, params, scores, figure, held_table, held_name) -> str:
         "",
         f"## Held-out race: {held_name}",
         "",
-        f"![simulated vs actual]({Path('..') / 'figures' / figure.name})" if figure else "",
+        f"![simulated vs actual](../figures/{figure.name})" if figure else "",
         "",
         md_table(held, ".2f"),
         "",

@@ -1,8 +1,8 @@
 # Race simulator backtest: Sakhir
 
-_Generated 2026-10-25 22:27 UTC from commit `9e97228` by `python -m strategist.sim.backtest`. Do not edit by hand._
+_Generated 2026-10-25 23:23 UTC from commit `85c55ef` by `python -m strategist.sim.backtest`. Do not edit by hand._
 
-**Setup.** Each race is replayed from the actual order and gaps after lap 1 with the strategies, safety-car/VSC laps and retirements that actually happened, 500 Monte Carlo runs. Lap-time network and simulator parameters are fitted on the training seasons only; training-season races are in-sample, the evaluation season (val) is held out. Actual order is road order at the line (official results include post-race penalties).
+**Setup.** Each race is replayed from the actual order and gaps after lap 1 with the strategies, safety-car/VSC laps and retirements that actually happened, 500 Monte Carlo runs. Lap-time network and simulator parameters are fitted on 2021–2023 only; races from those seasons are in-sample, the evaluation season (val) is held out. Actual order is road order at the line (official results include post-race penalties).
 
 **Metrics.** `pos_mae`: mean |median simulated − actual| finishing position. `spearman`: rank correlation of mean simulated and actual finishing order. `coverage_80`: share of drivers whose actual position falls in the simulated 10–90% range (≈0.8 if calibrated). `p_actual_winner`: simulated probability for the actual winner. `gap_mae_s`: error in gap to the winner for lead-lap finishers. `lap_pos_mae`: position error averaged over every lap of the race. Baselines have no distribution, so only position metrics apply.
 
@@ -30,7 +30,7 @@ _Generated 2026-10-25 22:27 UTC from commit `9e97228` by `python -m strategist.s
 
 ## Held-out race: Bahrain Grand Prix 2024
 
-![simulated vs actual](..\figures\sim_backtest_2024_01.png)
+![simulated vs actual](../figures/sim_backtest_2024_01.png)
 
 | driver | actual_pos | median_pos | p10_pos | p90_pos | p_win | p_podium | actual_gap_s | median_gap_s |
 |---|---|---|---|---|---|---|---|---|

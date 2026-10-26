@@ -1,6 +1,6 @@
 # Lap-time models: val season (2024)
 
-_Generated 2026-10-25 22:25 UTC from commit `9e97228` by `python -m strategist.eval.run`. Do not edit by hand._
+_Generated 2026-10-26 10:56 UTC from commit `85c55ef` by `python -m strategist.eval.run`. Do not edit by hand._
 
 **Task.** Forecast every clean lap of an unseen season from information available before the lap starts (qualifying pace, circuit, tyres, lap number, weather sample, gap to the car ahead). Trained on 2021, 2022, 2023 (48,496 laps); scored on 19,969 laps across 20 races.
 
@@ -98,13 +98,13 @@ Coefficients scaled by the median qualifying lap at Sakhir (91.3 s). The fuel te
 
 ## `lap_net` at Sakhir, in seconds
 
-Fuel effect: 0.076 s per lap of fuel on board. Degradation relative to a 1-lap-old tyre (median conditions). Training data at Sakhir reaches 31 laps of tyre age; beyond that the curve is extrapolated by construction (non-decreasing, convex).
+Fuel effect: 0.076 s per lap of fuel on board. Degradation relative to a 1-lap-old tyre (median conditions; compounds as nominated for Sakhir 2023: hard 1.5, medium 2, soft 3 on the hardness scale). Training data at Sakhir reaches 31 laps of tyre age; beyond that the curve is extrapolated by construction (non-decreasing, convex).
 
 | compound | age 1 | age 5 | age 10 | age 15 | age 20 | age 25 | age 30 | age 35 | age 40 |
 |---|---|---|---|---|---|---|---|---|---|
 | SOFT | 0.00 | 0.42 | 0.96 | 1.56 | 2.19 | 2.86 | 3.56 | 4.29 | 5.03 |
-| MEDIUM | 0.00 | 0.42 | 0.96 | 1.56 | 2.19 | 2.86 | 3.56 | 4.29 | 5.03 |
-| HARD | 0.00 | 0.42 | 0.96 | 1.56 | 2.19 | 2.86 | 3.56 | 4.29 | 5.03 |
+| MEDIUM | 0.00 | 0.35 | 0.81 | 1.32 | 1.86 | 2.43 | 3.02 | 3.64 | 4.28 |
+| HARD | 0.00 | 0.33 | 0.77 | 1.24 | 1.76 | 2.29 | 2.85 | 3.43 | 4.03 |
 
 ## `lightgbm` feature importance (share of total gain, %)
 
