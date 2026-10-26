@@ -146,8 +146,10 @@ plan.
 
 - **Per-stint degradation is mostly unpredictable before the race.** Across all circuits the
   stint-slope skill is ≤ 0 for every model, this one included: drivers manage tyres to plan,
-  so a stint's degradation is driver- and stint-specific. Planned fix: in-race adaptation
-  (a sequence model conditioned on the laps already run).
+  so a stint's degradation is driver- and stint-specific. In-race adaptation
+  (`docs/reports/in_race_val.md`) cuts lap-time error by about a quarter once laps have been
+  run, but by correcting the pace level: on 2025 it did not predict the rest of a stint's
+  wear rate any better (0.050 s/lap error, same as this model).
 - **Unseen circuits are weaker.** On 2024 the within-race error was higher (0.585 s vs
   0.520 s); on 2025 the within-race error was fine but the absolute pace level at Montréal was
   off (MAE 1.55 s, worst of all models). The "unknown" embedding is a weak prior; circuit

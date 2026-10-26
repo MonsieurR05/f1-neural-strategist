@@ -73,12 +73,25 @@ conditions) and the simulator composes them into counterfactuals.
 - **Metrics:** MAE, RMSE, NLL, calibration (PIT histogram / interval coverage),
   stint degradation-slope error, error on long-stint extrapolation slices.
 
-- **Split:** by season, never random laps. Train 2021–2023 · validate 2024 ·
-  test 2025 (used once; for it, models are refitted on 2021–2024).
+- **Split:** by season, never random laps. Originally train 2021–2023 · validate 2024 ·
+  test 2025 (used once, 2026-10-26; for it, models were refitted on 2021–2024). Now train
+  2021–2024 · validate 2025 · test 2026 (sealed after the 2026 season ends).
 
-- **v2 — GRU in-race adaptation:** condition on the laps already run in the current
-  stint to infer today's degradation. Test: predict the rest of a stint from its
-  first *k* laps, with vs. without the sequence encoder.
+- **v2 — in-race adaptation** (`strategist.models.inrace`,
+  `docs/reports/in_race_val.md`): at a cutoff, forecast lap_net's error on every lap still
+  to come from the clean laps run so far. Most of lap_net's out-of-season error is race-level
+  and persists (65% shared by the field, 12% a driver's race offset), so the update targets
+  pace level first. Two models, compared with lap_net (no update) and an analyst's "shift by
+  the driver's mean error so far":
+  - **GP:** structured Gaussian process (race, start/restart, race trend, drift, compound in
+    this race, driver, stint; exact posterior, hyperparameters by marginal likelihood). The
+    compound term carries information across drivers (the field's hard stints inform a
+    driver who hasn't fitted the hard yet).
+  - **GRU:** recurrent network over each driver's race so far plus the field's mean error per
+    lap; a head maps its state and a future lap's tyre state to mean and σ.
+  Both are trained on lap_net's leave-one-season-out residuals, so the error they learn to
+  remove is the size it is on a new season. Future laps are forecast as if no further safety
+  car comes.
 
 ### Network B — strategy value surrogate (phase 2)
 
@@ -245,6 +258,7 @@ docs/                  design, model card, evaluation reports
 | 2026-10-25 | No database in MVP (Parquet + DuckDB) |
 | 2026-10-25 | Monorepo on GitHub, private until MVP is presentable |
 | 2026-10-25 | No F1 TV: seasons narrowed to 2021–2025 (FastF1 mirror 2021–22, OpenF1 2023–25); split train 2021–23 / val 2024 / test 2025 |
+| 2026-10-26 | **In-race adaptation (v2), validated on 2025** (`docs/reports/in_race_val.md`). Split moved to train 2021–24 / val 2025 / test 2026; 2026 is not ingested until the season ends (6 Dec) and is then sealed. No 2026 race at Sakhir (round 16 ran at Sepang), so the 2026 simulator test will cover every dry race at a circuit seen in training. lap_net's out-of-season residuals now keep the lap number. Models: structured GP and GRU over lap_net's residuals, against lap_net and the driver's mean error so far. All 2025 races, cutoffs at 10/25/50/75% of distance, 48.6k forecast laps: MAE lap_net 0.906 s, driver mean 0.749, GP 0.697, GRU 0.665; vs lap_net GP −0.209 s [−0.442, −0.008], GRU −0.241 [−0.437, −0.058] (race bootstrap); GRU vs GP tied on MAE (−0.032 [−0.116, +0.072]), better NLL (−0.141 [−0.314, −0.021]); 90% coverage 0.93 for both (lap_net 0.87). The GP is best 1–5 laps ahead (0.434 s) and from 75% distance; the GRU early in the race and far ahead. Three validation-driven GP changes, all structural: a race trend term (residuals drift steadily against lap_net, e.g. Suzuka −0.8 → −2.4 s), and a slow-laps term after the start, then keyed to every restart (Baku's first green lap after an opening safety car was +3.6 s; without it the update made Baku worse than none). The GRU got the same restart input. Not fixed: neither model predicts the remaining wear rate of a stint better than lap_net (slope error 0.050 s/lap for all), so in-race updating corrects pace level, not stint-specific degradation; updating still hurts at Monaco (2025 two-stop tactics), Baku, Singapore and Austin. Next: feed the update into the simulator (pit-wall mode) |
 | 2026-10-26 | **Live app moved to models fitted on 2021–2025** after the final test: `python -m strategist.sim.fit` refits lap_net (6 epochs, early stopping on 2025) and recalibrates the simulator on every season with unchanged settings; `configs/api*.yaml` `model_tag: 2021-2025`. The API's tyre-age limits now come from the model tag's seasons rather than the train split, so they match the served model. Bahrain degradation at 20 laps rose to 1.6/1.8/2.1 s (hard/medium/soft; 2021–24 fit 1.2/1.3/1.5); simulator parameters moved slightly (common variance share 0.63 → 0.57, SC lap ratio 1.55 → 1.53). All races in the app are now in-sample, which the home page states; held-out accuracy is the 2025 test of the same procedure |
 | 2026-10-26 | **Final test on the sealed 2025 season** (`docs/reports/lap_time_models_test.md`, `docs/reports/sim_backtest_test.md`; `--split test --final`, run once). Protocol fixed before running: every model refitted on all pre-test seasons (2021–24) with the development settings (`strategist.config.training_seasons`); lap_net's epoch rule picked 4 epochs (early stopping on 2024), not the 21 of the validation-era model. Lap time, 19,959 laps: lap_net MAE 0.900 s / within-race 0.491 / NLL 1.625, best on all three (LightGBM 0.986 / 0.533 / 1.865; linear 1.085 / 0.512 / 1.970); vs LightGBM the within-race gain −0.042 s [−0.068, −0.017] is significant, MAE and NLL gains are not. Weak points: 90% coverage 0.86 (all models under-cover), unseen Montréal MAE 1.55 s (worst model there, within-race fine). Simulator, 2025 Bahrain held out: position MAE 2.22, worse than the frozen lap-1 order (1.78), coverage 0.83, P(winner) 0.74; misses are the Haas pair (race pace above their qualifying anchor) and Antonelli. Two report bugs found while reviewing, fixed and all four reports regenerated with identical scores: the `lap_net` degradation table probed every compound at the median hardness (so it showed one curve; now each compound at the circuit's latest nomination), and figure links used Windows paths. The live app keeps the 2021–23 models. Any later change needs a new held-out season (2026) to be judged |
 | 2026-10-26 | Deployed. Frontend on Vercel (https://f1-neural-strategist.vercel.app, project env `API_URL`/`NEXT_PUBLIC_API_URL`); API on Fly.io (https://f1-neural-strategist-api.fly.dev): one shared-cpu-2x / 1 GB machine in lhr with auto-stop (scale to zero), CPU-only image 390 MB, CORS limited to the Vercel origin, per-client quotas and one optimisation at a time. Measured in a 1 GB / 2-CPU container: 4 s startup, optimise 42 s / 641 MB peak; on Fly an optimisation sharing the CPUs with six simulations took ~2 min. Verified live end to end (server-side race fetch, browser simulate and optimise, CORS refusal of other origins) |

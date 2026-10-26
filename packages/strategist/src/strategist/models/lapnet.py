@@ -322,7 +322,7 @@ class LapTimeNet:
             resid_laps.append(fold_eval)
         log.info("lap_net: σ head from %d out-of-season residuals", sum(len(r) for r in resid_parts))
         if resid_parts:  # kept for the simulator's split of race-level vs lap-level variance
-            self.oos_residuals = pd.concat(resid_laps)[["race_id", "driver", "q_s"]].assign(
+            self.oos_residuals = pd.concat(resid_laps)[["race_id", "driver", "lap_number", "q_s"]].assign(
                 resid_pct=torch.cat(resid_parts).numpy())
 
         self.modules = []

@@ -10,10 +10,13 @@ dry_only: true
 # Pirelli compounds nominated as hard/medium/soft per race (strategist.data.compounds)
 compounds: configs/compounds.csv
 
-split:                  # by season, never by random laps
-  train: [2021, 2022, 2023]
-  val: [2024]
-  test: [2025]
+# By season, never by random laps. 2025 was the original sealed test season (used once,
+# 2026-10-26: docs/reports/*_test.md); it is now validation, and 2026 is the new test season,
+# sealed once the season ends (Abu Dhabi, 2026-12-06). Not ingested until then.
+split:
+  train: [2021, 2022, 2023, 2024]
+  val: [2025]
+  test: [2026]
 
 focus_circuit: Sakhir   # Bahrain International Circuit (grand prix layout); MVP sim/UI scope
 

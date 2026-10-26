@@ -1,0 +1,28 @@
+# In-race adaptation evaluation (python -m strategist.eval.inrace). Splits from data_config.
+data_config: configs/data.yaml
+eval_config: configs/eval.yaml     # lap_net settings
+model_dir: artifacts/models        # lap_net cache shared with the simulator
+
+# Forecast every clean lap after the cutoff from the clean laps up to it, at these shares of
+# race distance, given the strategy each driver actually ran.
+cutoffs: [0.1, 0.25, 0.5, 0.75]
+
+gp:
+  steps: 300
+  races_per_step: 8
+  lr: 0.03
+  seed: 0
+
+gru:
+  hidden: 32
+  lr: 0.003
+  weight_decay: 0.0001
+  max_epochs: 200
+  patience: 20
+  cutoffs_per_seq: 4
+  batch_size: 128
+  seed: 0
+  threads: 8
+
+report_dir: docs/reports
+report_name: in_race

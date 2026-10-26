@@ -14,7 +14,9 @@ seconds longer.
 > ([model card](docs/MODEL_CARD.md)), the Monte Carlo race simulator, the strategy optimiser
 > behind a FastAPI service ([API](services/api/README.md)), and the Next.js web app
 > ([web](apps/web/README.md)). The sealed 2025 test season has been used for the final
-> evaluation (results below). Next: the fast strategy surrogate and in-race "pit wall" mode.
+> evaluation (results below). Since then: in-race adaptation, which updates the forecast
+> from the laps already run (2025 validation below). Next: feed it into the simulator for an
+> in-race "pit wall" mode, then test everything on the 2026 season once it ends.
 > See [docs/DESIGN.md](docs/DESIGN.md) for the full design.
 
 **Final test: lap-time forecasting on the sealed 2025 season** (19,959 laps, 20 dry races;
@@ -62,6 +64,26 @@ from the lap-1 baseline; positions in midfield remain the weak point
 [validation backtest](docs/reports/sim_backtest_val.md)). Asked to re-optimise Verstappen's
 2024 race, the optimiser rates his actual soft–hard–soft as within about a second of the
 best plan, i.e. near-optimal, as the result suggests.
+
+**In-race adaptation (2025 validation season):** lap_net forecasts a race before it starts,
+and most of its error is a race-level pace offset that persists, so the laps already run
+are informative. At 10/25/50/75% of race distance, two models forecast lap_net's error on
+every lap still to come ([report](docs/reports/in_race_val.md)):
+
+| Model | Lap-time MAE | NLL | 90% coverage |
+|---|---|---|---|
+| lap_net, no update | 0.906 s | 1.639 | 0.87 |
+| Driver's mean error so far | 0.749 s | – | – |
+| Structured Gaussian process | 0.697 s | 1.371 | 0.93 |
+| **GRU** | **0.665 s** | **1.230** | 0.93 |
+
+Both in-race models beat no update by about a quarter (race-bootstrap intervals exclude
+zero). They are tied with each other on error, and the GRU's uncertainty is better. The GP,
+whose terms are interpretable (race, restart, trend, compound, driver, stint), is the most
+accurate over the next five laps. What they don't do: predict the rest of a stint's wear
+rate any better than lap_net. They correct the pace level, not stint-specific
+degradation. Updating also still hurts in a few races (Monaco 2025's two-stop tactics,
+Baku, Singapore).
 
 The live app serves lap_net and simulator parameters refitted on all five seasons
 (2021–2025, `python -m strategist.sim.fit`) with the same settings. Every race in the app is
@@ -129,6 +151,17 @@ Evaluate the lap-time models on the validation season (writes
 ```bash
 python -m strategist.eval.run --config configs/eval.yaml
 ```
+
+Evaluate in-race adaptation on the validation season (writes `docs/reports/in_race_val.md`;
+a few minutes on a CPU):
+
+```bash
+python -m strategist.eval.inrace --config configs/inrace.yaml
+```
+
+The split is now train 2021–2024 / validate 2025 / test 2026, so `strategist.eval.run` and
+`strategist.sim.backtest` validate on 2025; the committed `*_val.md` lap-time and backtest
+reports are from the original split (validated on 2024).
 
 Backtest the race simulator on Bahrain (trains and caches lap_net and the simulator
 parameters under `artifacts/models/` on first run; writes `docs/reports/sim_backtest_val.md`):

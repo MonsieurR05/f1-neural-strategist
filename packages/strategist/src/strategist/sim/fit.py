@@ -29,7 +29,9 @@ def main(argv: list[str] | None = None) -> int:
     processed = Path(data_cfg["paths"]["processed"])
     laps_raw = pd.read_parquet(processed / "laps.parquet")
     races = pd.read_parquet(processed / "races.parquet")
-    seasons = sorted({y for years in data_cfg["split"].values() for y in years})
+    # every split season that has been ingested (a test season may not be yet)
+    seasons = sorted({y for years in data_cfg["split"].values() for y in years}
+                     & set(laps_raw["year"].unique()))
     fitted_models(cfg, eval_cfg, laps_raw, races, seasons)
     log.info("models for %d-%d in %s", seasons[0], seasons[-1], cfg["model_dir"])
     return 0
