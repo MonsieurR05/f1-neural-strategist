@@ -40,8 +40,9 @@ class AppState:
         torch.set_num_threads(int(os.environ.get("F1S_THREADS", self.cfg.get("threads", 4))))
         self.net = LapTimeNet.load(model_dir / f"lap_net_{tag}.pt")
         self.params = SimParams.load(model_dir / f"sim_params_{tag}.json")
-        train_years = data_cfg["split"]["train"]
-        self.train_laps = self.laps[self.laps["year"].isin(train_years)]
+        # Tyre-age limits come from the seasons the served models were fitted on (the tag).
+        first, last = (int(y) for y in str(tag).split("-"))
+        self.train_laps = self.laps[self.laps["year"].between(first, last)]
         self._setup = lru_cache(maxsize=64)(self._build_setup)
 
     def simulatable(self, race_id: str) -> bool:

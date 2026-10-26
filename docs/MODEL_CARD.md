@@ -69,7 +69,11 @@ a Gaussian mixture.
   refitted on 2021–2024 with the settings fixed during development; the rule above picked 4
   epochs (early stopping on 2024 when fitting 2021–23), against 21 for the validation-era
   model. Nothing was tuned on 2025.
-- The deployed app serves the 2021–2023 model (the one validated on 2024).
+- The deployed app serves a refit on all of 2021–2025 (`python -m strategist.sim.fit`; the
+  epoch rule picked 6 epochs, early stopping on 2025). It has no held-out season of its own:
+  its expected accuracy is the 2025 test result of the same procedure fitted on 2021–2024.
+  Its Bahrain degradation after 20 laps (2025 nominations) is hard 1.6 s, medium 1.8 s, soft
+  2.1 s, steeper than the 2021–2024 fit (1.2 / 1.3 / 1.5 s): 2025 Bahrain wore tyres harder.
 
 ## Results (2025 test, final)
 

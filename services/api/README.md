@@ -19,7 +19,7 @@ happened) or `simulated` (counterfactual estimates).
 ## Run
 
 From the repository root, after building the dataset and model artifacts
-(`python -m strategist.sim.backtest` creates `artifacts/models/`):
+(`python -m strategist.sim.fit` creates the served models in `artifacts/models/`):
 
 ```bash
 pip install -e services/api[dev]

@@ -2,7 +2,7 @@
 # local build artifacts, not in git):
 #
 #   python -m strategist.data.clean && python -m strategist.data.tracks --circuit Sakhir
-#   python -m strategist.sim.backtest          # trains lap_net, calibrates the simulator
+#   python -m strategist.sim.fit               # trains lap_net, calibrates the simulator
 #   docker build -f services/api/Dockerfile -t f1-strategist-api .
 #   docker run -p 8080:8080 -e F1S_CORS_ORIGINS=http://localhost:3000 f1-strategist-api
 

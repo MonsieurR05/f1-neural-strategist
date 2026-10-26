@@ -10,13 +10,14 @@ export default function Home() {
         <h1 className="text-2xl font-semibold text-ink sm:text-3xl">Race strategy, simulated lap by lap</h1>
         <p className="text-ink-2">
           Pick a race, replay what happened, then change a driver&apos;s pit stops and tyres and see how
-          the race could have played out. A neural lap-time model trained on 2021–2023 drives a Monte
+          the race could have played out. A neural lap-time model trained on 2021–2025 drives a Monte
           Carlo simulator with traffic, overtaking, pit stops and safety cars; an optimiser ranks every
           legal strategy and explains the trade-offs.
         </p>
         <p className="text-sm text-ink-3">
           Bahrain is the calibrated MVP circuit. Simulated results are counterfactual estimates and are
-          always marked as such.
+          always marked as such. The models are fitted on every race listed here, so replays are
+          in-sample; accuracy on unseen races comes from a held-out test on the 2025 season.
         </p>
       </section>
       <Suspense fallback={<p className="text-ink-3">Loading races…</p>}>

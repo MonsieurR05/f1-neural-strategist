@@ -63,7 +63,10 @@ from the lap-1 baseline; positions in midfield remain the weak point
 2024 race, the optimiser rates his actual soft–hard–soft as within about a second of the
 best plan, i.e. near-optimal, as the result suggests.
 
-The live app serves the models fitted on 2021–2023 (the ones validated on 2024).
+The live app serves lap_net and simulator parameters refitted on all five seasons
+(2021–2025, `python -m strategist.sim.fit`) with the same settings. Every race in the app is
+therefore in-sample; the held-out accuracy of this setup is the 2025 test above, where the
+same procedure was fitted on 2021–2024.
 
 ![Simulated vs actual finishing positions, 2025 Bahrain GP](docs/figures/sim_backtest_2025_04.png)
 
