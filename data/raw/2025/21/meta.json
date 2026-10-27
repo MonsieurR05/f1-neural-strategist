@@ -1,0 +1,16 @@
+{
+  "total_laps": 71,
+  "laps_completed": 71,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9869,
+  "openf1_meeting_key": 1273,
+  "year": 2025,
+  "round": 21,
+  "event_name": "S\u00e3o Paulo Grand Prix",
+  "location": "S\u00e3o Paulo",
+  "country": "Brazil",
+  "event_date": "2025-11-09",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:07+00:00"
+}

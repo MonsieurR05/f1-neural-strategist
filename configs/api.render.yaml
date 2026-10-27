@@ -1,0 +1,26 @@
+# Render free-instance profile (render.yaml): 512 MB and 0.1 CPU, so far fewer simulated races
+# than configs/api.deploy.yaml and a coarse optimiser search. One optimisation at a time.
+data_config: configs/data.yaml
+model_dir: artifacts/models
+model_tag: 2021-2025
+threads: 1
+cors_origins: []
+
+limits:
+  simulate_per_hour: 30
+  optimise_per_hour: 4
+  concurrent_simulate: 2      # the strategy builder sends two at once
+  concurrent_optimise: 1
+
+simulate:
+  default_runs: 100
+  max_runs: 100
+
+optimise:
+  max_stops: 2
+  pit_step: 4
+  min_stint: 6
+  screen_runs: 4
+  refine_runs: 40
+  max_refine_runs: 40
+  refine_top: 3

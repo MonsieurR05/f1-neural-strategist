@@ -1,0 +1,13 @@
+{
+  "total_laps": 71,
+  "laps_completed": 71,
+  "year": 2022,
+  "round": 11,
+  "event_name": "Austrian Grand Prix",
+  "location": "Spielberg",
+  "country": "Austria",
+  "event_date": "2022-07-10",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:18:00+00:00"
+}

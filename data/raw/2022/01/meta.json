@@ -1,0 +1,12 @@
+{
+  "total_laps": 57,
+  "laps_completed": 57,
+  "year": 2022,
+  "round": 1,
+  "event_name": "Bahrain Grand Prix",
+  "location": "Sakhir",
+  "country": "Bahrain",
+  "event_date": "2022-03-20",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T16:58:04+00:00"
+}

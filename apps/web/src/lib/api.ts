@@ -121,9 +121,10 @@ export interface OptimiseResponse {
   caveats: string[];
 }
 
-// Server components reach the API directly; the browser uses the public URL.
-const SERVER_BASE = process.env.API_URL ?? "http://127.0.0.1:8000";
-const BROWSER_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Server components reach the API directly; the browser uses the public URL. Trimmed because
+// piping the value into `vercel env add` from PowerShell stores a trailing CRLF.
+const SERVER_BASE = (process.env.API_URL ?? "http://127.0.0.1:8000").trim();
+const BROWSER_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").trim();
 const base = () => (typeof window === "undefined" ? SERVER_BASE : BROWSER_BASE);
 
 export class ApiError extends Error {

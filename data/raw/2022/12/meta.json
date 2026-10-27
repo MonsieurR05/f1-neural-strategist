@@ -1,0 +1,13 @@
+{
+  "total_laps": 53,
+  "laps_completed": 53,
+  "year": 2022,
+  "round": 12,
+  "event_name": "French Grand Prix",
+  "location": "Le Castellet",
+  "country": "France",
+  "event_date": "2022-07-24",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:18:08+00:00"
+}

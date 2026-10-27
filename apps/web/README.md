@@ -32,11 +32,11 @@ npm run build
 ## Deployment (Vercel)
 
 Live at https://f1-neural-strategist.vercel.app. The Vercel project
-(`f1-neural-strategist`) has `API_URL` and `NEXT_PUBLIC_API_URL` set to the Fly API for
+(`f1-neural-strategist`) has `API_URL` and `NEXT_PUBLIC_API_URL` set to the Render API for
 production. To set it up or point it at a different API, then deploy (from `apps/web`):
 
 ```powershell
-& .\scripts\vercel-setup.ps1 -ApiUrl https://f1-neural-strategist-api.fly.dev
+& .\scripts\vercel-setup.ps1 -ApiUrl https://f1-neural-strategist-api.onrender.com
 vercel deploy --prod --yes
 ```
 

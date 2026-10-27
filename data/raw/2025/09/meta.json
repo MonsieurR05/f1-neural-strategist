@@ -1,0 +1,16 @@
+{
+  "total_laps": 66,
+  "laps_completed": 66,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9971,
+  "openf1_meeting_key": 1262,
+  "year": 2025,
+  "round": 9,
+  "event_name": "Spanish Grand Prix",
+  "location": "Barcelona",
+  "country": "Spain",
+  "event_date": "2025-06-01",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:06+00:00"
+}

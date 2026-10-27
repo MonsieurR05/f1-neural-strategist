@@ -1,0 +1,13 @@
+{
+  "total_laps": 56,
+  "laps_completed": 56,
+  "year": 2022,
+  "round": 19,
+  "event_name": "United States Grand Prix",
+  "location": "Austin",
+  "country": "United States",
+  "event_date": "2022-10-23",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:19:10+00:00"
+}

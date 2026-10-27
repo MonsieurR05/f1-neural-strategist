@@ -1,0 +1,13 @@
+{
+  "total_laps": 53,
+  "laps_completed": 29,
+  "year": 2022,
+  "round": 18,
+  "event_name": "Japanese Grand Prix",
+  "location": "Suzuka",
+  "country": "Japan",
+  "event_date": "2022-10-09",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:19:02+00:00"
+}

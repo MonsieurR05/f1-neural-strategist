@@ -39,7 +39,7 @@ export function OptimiserPanel({ race, driver, onLoad }: {
     <div className="space-y-4">
       <p className="text-sm text-ink-2">
         Enumerates every legal strategy for <span className="font-semibold text-ink">{driver}</span> from the chosen lap,
-        screens them all in the simulator, then re-runs the best with 300 races each and compares them with what was raced.
+        screens them all in the simulator, then re-runs the best with more races each and compares them with what was raced.
       </p>
       <div className="grid grid-cols-3 gap-3 text-sm">
         <label className="space-y-1">

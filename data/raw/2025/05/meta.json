@@ -1,0 +1,16 @@
+{
+  "total_laps": 50,
+  "laps_completed": 50,
+  "quali_source": "jolpica",
+  "openf1_session_key": 10022,
+  "openf1_meeting_key": 1258,
+  "year": 2025,
+  "round": 5,
+  "event_name": "Saudi Arabian Grand Prix",
+  "location": "Jeddah",
+  "country": "Saudi Arabia",
+  "event_date": "2025-04-20",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:06+00:00"
+}

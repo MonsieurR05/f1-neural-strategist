@@ -14,7 +14,7 @@ export interface SimPair {
   edited: SimulateResponse;
 }
 
-const RUNS = 300;
+const RUNS = 300; // requested; the API caps it at its profile's max_runs (100 on Render)
 
 export function StrategyBuilder({ race, driver, draft, onDraft, result, onResult }: {
   race: RaceDetail;
@@ -90,7 +90,7 @@ export function StrategyBuilder({ race, driver, draft, onDraft, result, onResult
           ))}
         </fieldset>
         <Button onClick={run} disabled={busy || issues.length > 0}>
-          {busy ? `Simulating… ${elapsed.toFixed(0)} s` : `Simulate (${RUNS} races each)`}
+          {busy ? `Simulating… ${elapsed.toFixed(0)} s` : "Simulate"}
         </Button>
       </div>
       {error && <ErrorNote message={error} />}

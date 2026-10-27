@@ -1,0 +1,16 @@
+{
+  "total_laps": 57,
+  "laps_completed": 57,
+  "quali_source": "openf1",
+  "openf1_session_key": 10033,
+  "openf1_meeting_key": 1259,
+  "year": 2025,
+  "round": 6,
+  "event_name": "Miami Grand Prix",
+  "location": "Miami Gardens",
+  "country": "United States",
+  "event_date": "2025-05-04",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:06+00:00"
+}

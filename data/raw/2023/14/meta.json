@@ -1,0 +1,16 @@
+{
+  "total_laps": 51,
+  "laps_completed": 52,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9157,
+  "openf1_meeting_key": 1218,
+  "year": 2023,
+  "round": 14,
+  "event_name": "Italian Grand Prix",
+  "location": "Monza",
+  "country": "Italy",
+  "event_date": "2023-09-03",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:03+00:00"
+}

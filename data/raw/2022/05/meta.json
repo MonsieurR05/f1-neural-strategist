@@ -1,0 +1,13 @@
+{
+  "total_laps": 57,
+  "laps_completed": 57,
+  "year": 2022,
+  "round": 5,
+  "event_name": "Miami Grand Prix",
+  "location": "Miami",
+  "country": "United States",
+  "event_date": "2022-05-08",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:17:02+00:00"
+}

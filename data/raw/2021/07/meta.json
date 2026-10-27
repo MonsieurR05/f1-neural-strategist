@@ -1,0 +1,13 @@
+{
+  "total_laps": 53,
+  "laps_completed": 53,
+  "year": 2021,
+  "round": 7,
+  "event_name": "French Grand Prix",
+  "location": "Le Castellet",
+  "country": "France",
+  "event_date": "2021-06-20",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T17:11:27+00:00"
+}

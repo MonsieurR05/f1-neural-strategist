@@ -1,0 +1,16 @@
+{
+  "total_laps": 70,
+  "laps_completed": 70,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9133,
+  "openf1_meeting_key": 1215,
+  "year": 2023,
+  "round": 11,
+  "event_name": "Hungarian Grand Prix",
+  "location": "Budapest",
+  "country": "Hungary",
+  "event_date": "2023-07-23",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:03+00:00"
+}

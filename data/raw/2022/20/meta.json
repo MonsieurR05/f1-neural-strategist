@@ -1,0 +1,13 @@
+{
+  "total_laps": 71,
+  "laps_completed": 71,
+  "year": 2022,
+  "round": 20,
+  "event_name": "Mexico City Grand Prix",
+  "location": "Mexico City",
+  "country": "Mexico",
+  "event_date": "2022-10-30",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:19:20+00:00"
+}

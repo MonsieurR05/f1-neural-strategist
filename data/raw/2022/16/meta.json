@@ -1,0 +1,13 @@
+{
+  "total_laps": 53,
+  "laps_completed": 53,
+  "year": 2022,
+  "round": 16,
+  "event_name": "Italian Grand Prix",
+  "location": "Monza",
+  "country": "Italy",
+  "event_date": "2022-09-11",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:18:44+00:00"
+}

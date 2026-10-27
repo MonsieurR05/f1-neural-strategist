@@ -1,0 +1,13 @@
+{
+  "total_laps": 63,
+  "laps_completed": 63,
+  "year": 2021,
+  "round": 2,
+  "event_name": "Emilia Romagna Grand Prix",
+  "location": "Imola",
+  "country": "Italy",
+  "event_date": "2021-04-18",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T17:10:20+00:00"
+}

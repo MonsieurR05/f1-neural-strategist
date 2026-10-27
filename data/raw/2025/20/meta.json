@@ -1,0 +1,16 @@
+{
+  "total_laps": 71,
+  "laps_completed": 71,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9877,
+  "openf1_meeting_key": 1272,
+  "year": 2025,
+  "round": 20,
+  "event_name": "Mexico City Grand Prix",
+  "location": "Mexico City",
+  "country": "Mexico",
+  "event_date": "2025-10-26",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:07+00:00"
+}

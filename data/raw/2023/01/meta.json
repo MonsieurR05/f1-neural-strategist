@@ -1,0 +1,16 @@
+{
+  "total_laps": 57,
+  "laps_completed": 57,
+  "quali_source": "jolpica",
+  "openf1_session_key": 7953,
+  "openf1_meeting_key": 1141,
+  "year": 2023,
+  "round": 1,
+  "event_name": "Bahrain Grand Prix",
+  "location": "Sakhir",
+  "country": "Bahrain",
+  "event_date": "2023-03-05",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:02+00:00"
+}

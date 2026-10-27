@@ -1,0 +1,16 @@
+{
+  "total_laps": 52,
+  "laps_completed": 53,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9126,
+  "openf1_meeting_key": 1214,
+  "year": 2023,
+  "round": 10,
+  "event_name": "British Grand Prix",
+  "location": "Silverstone",
+  "country": "Great Britain",
+  "event_date": "2023-07-09",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:03+00:00"
+}

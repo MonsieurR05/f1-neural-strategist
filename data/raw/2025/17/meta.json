@@ -1,0 +1,16 @@
+{
+  "total_laps": 51,
+  "laps_completed": 51,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9904,
+  "openf1_meeting_key": 1269,
+  "year": 2025,
+  "round": 17,
+  "event_name": "Azerbaijan Grand Prix",
+  "location": "Baku",
+  "country": "Azerbaijan",
+  "event_date": "2025-09-21",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:07+00:00"
+}

@@ -1,0 +1,16 @@
+{
+  "total_laps": 57,
+  "laps_completed": 57,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9850,
+  "openf1_meeting_key": 1275,
+  "year": 2025,
+  "round": 23,
+  "event_name": "Qatar Grand Prix",
+  "location": "Lusail",
+  "country": "Qatar",
+  "event_date": "2025-11-30",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:07+00:00"
+}

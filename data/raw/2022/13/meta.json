@@ -1,0 +1,13 @@
+{
+  "total_laps": 70,
+  "laps_completed": 70,
+  "year": 2022,
+  "round": 13,
+  "event_name": "Hungarian Grand Prix",
+  "location": "Budapest",
+  "country": "Hungary",
+  "event_date": "2022-07-31",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:18:17+00:00"
+}
