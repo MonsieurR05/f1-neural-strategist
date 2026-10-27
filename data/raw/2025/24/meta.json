@@ -1,0 +1,16 @@
+{
+  "total_laps": 58,
+  "laps_completed": 58,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9839,
+  "openf1_meeting_key": 1276,
+  "year": 2025,
+  "round": 24,
+  "event_name": "Abu Dhabi Grand Prix",
+  "location": "Yas Island",
+  "country": "United Arab Emirates",
+  "event_date": "2025-12-07",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:07+00:00"
+}

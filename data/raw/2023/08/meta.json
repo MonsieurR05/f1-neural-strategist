@@ -1,0 +1,16 @@
+{
+  "total_laps": 70,
+  "laps_completed": 71,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9110,
+  "openf1_meeting_key": 1212,
+  "year": 2023,
+  "round": 8,
+  "event_name": "Canadian Grand Prix",
+  "location": "Montr\u00e9al",
+  "country": "Canada",
+  "event_date": "2023-06-18",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:03+00:00"
+}

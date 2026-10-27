@@ -1,0 +1,16 @@
+{
+  "total_laps": 44,
+  "laps_completed": 44,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9939,
+  "openf1_meeting_key": 1265,
+  "year": 2025,
+  "round": 13,
+  "event_name": "Belgian Grand Prix",
+  "location": "Spa-Francorchamps",
+  "country": "Belgium",
+  "event_date": "2025-07-27",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:06+00:00"
+}

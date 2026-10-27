@@ -1,0 +1,25 @@
+# Render Blueprint for the strategy API (services/api) on the free instance: 512 MB, 0.1 CPU,
+# spins down after 15 idle minutes and takes about a minute to wake. Render builds
+# services/api/Dockerfile from this repository, so the data and model files it copies are
+# committed (see .gitignore). configs/api.render.yaml is the profile sized for that machine.
+services:
+  - type: web
+    name: f1-neural-strategist-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./services/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: F1S_API_CONFIG
+        value: configs/api.render.yaml
+      # the only browser origin allowed to call the API (the Vercel frontend)
+      - key: F1S_CORS_ORIGINS
+        value: https://f1-neural-strategist.vercel.app
+      - key: F1S_THREADS
+        value: "1"
+      # glibc otherwise reserves a malloc arena per thread; memory is the tight resource here
+      - key: MALLOC_ARENA_MAX
+        value: "2"

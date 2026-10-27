@@ -1,0 +1,13 @@
+{
+  "total_laps": 77,
+  "laps_completed": 64,
+  "year": 2022,
+  "round": 7,
+  "event_name": "Monaco Grand Prix",
+  "location": "Monaco",
+  "country": "Monaco",
+  "event_date": "2022-05-29",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:17:21+00:00"
+}

@@ -1,0 +1,13 @@
+{
+  "total_laps": 53,
+  "laps_completed": 53,
+  "year": 2021,
+  "round": 15,
+  "event_name": "Russian Grand Prix",
+  "location": "Sochi",
+  "country": "Russia",
+  "event_date": "2021-09-26",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T17:13:24+00:00"
+}

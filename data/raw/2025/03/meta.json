@@ -1,0 +1,16 @@
+{
+  "total_laps": 53,
+  "laps_completed": 53,
+  "quali_source": "jolpica",
+  "openf1_session_key": 10006,
+  "openf1_meeting_key": 1256,
+  "year": 2025,
+  "round": 3,
+  "event_name": "Japanese Grand Prix",
+  "location": "Suzuka",
+  "country": "Japan",
+  "event_date": "2025-04-06",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:06+00:00"
+}

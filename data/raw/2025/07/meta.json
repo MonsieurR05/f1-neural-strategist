@@ -1,0 +1,16 @@
+{
+  "total_laps": 63,
+  "laps_completed": 63,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9987,
+  "openf1_meeting_key": 1260,
+  "year": 2025,
+  "round": 7,
+  "event_name": "Emilia Romagna Grand Prix",
+  "location": "Imola",
+  "country": "Italy",
+  "event_date": "2025-05-18",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:06+00:00"
+}

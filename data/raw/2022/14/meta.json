@@ -1,0 +1,13 @@
+{
+  "total_laps": 44,
+  "laps_completed": 44,
+  "year": 2022,
+  "round": 14,
+  "event_name": "Belgian Grand Prix",
+  "location": "Spa-Francorchamps",
+  "country": "Belgium",
+  "event_date": "2022-08-28",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:18:25+00:00"
+}

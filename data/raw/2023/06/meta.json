@@ -1,0 +1,16 @@
+{
+  "total_laps": 78,
+  "laps_completed": 79,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9094,
+  "openf1_meeting_key": 1210,
+  "year": 2023,
+  "round": 6,
+  "event_name": "Monaco Grand Prix",
+  "location": "Monaco",
+  "country": "Monaco",
+  "event_date": "2023-05-28",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:03+00:00"
+}

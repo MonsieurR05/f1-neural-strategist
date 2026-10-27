@@ -1,0 +1,13 @@
+{
+  "total_laps": 66,
+  "laps_completed": 66,
+  "year": 2022,
+  "round": 6,
+  "event_name": "Spanish Grand Prix",
+  "location": "Barcelona",
+  "country": "Spain",
+  "event_date": "2022-05-22",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:17:11+00:00"
+}

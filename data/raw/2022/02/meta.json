@@ -1,0 +1,13 @@
+{
+  "total_laps": 50,
+  "laps_completed": 50,
+  "year": 2022,
+  "round": 2,
+  "event_name": "Saudi Arabian Grand Prix",
+  "location": "Jeddah",
+  "country": "Saudi Arabia",
+  "event_date": "2022-03-27",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:16:36+00:00"
+}

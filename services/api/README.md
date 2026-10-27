@@ -36,23 +36,26 @@ curl -X POST localhost:8000/optimise -H "content-type: application/json" \
      -d '{"race_id": "2024_01", "driver": "LEC", "start_lap": 1, "top": 5}'
 ```
 
-## Deployment (Fly.io)
+## Deployment (Render)
 
-Live at https://f1-neural-strategist-api.fly.dev (health: `/health`, docs: `/docs`).
+Runs on Render's free instance (health: `/health`, docs: `/docs`).
 
 - Image: `services/api/Dockerfile` (CPU-only torch, pinned runtime deps, the strategist
   package without its pipeline/training extras, processed data, race results, track
-  outlines and trained models; 390 MB compressed). The data and model files are local build
-  artifacts, so deploy from a checkout where they have been built.
-- Config: `fly.toml` at the repository root: one `shared-cpu-2x` machine with 1 GB in `lhr`
-  that stops when idle (an optimisation peaks at ~650 MB), health check on `/health`, and
-  `F1S_CORS_ORIGINS` set to the Vercel site only. `configs/api.deploy.yaml` is the public
-  profile: lighter optimiser (~40 s on 2 vCPU when idle) and per-client quotas of 60
-  simulations and 8 optimisations an hour, one optimisation at a time.
+  outlines and trained models; 390 MB compressed). Render builds it from the repository, so
+  the data and model files it copies are committed (`.gitignore` lets those paths through).
+- Config: `render.yaml` at the repository root (a Render Blueprint): the free instance in
+  Frankfurt, 512 MB and 0.1 CPU, which spins down after 15 idle minutes and takes about a
+  minute to wake. Health check on `/health`, `F1S_CORS_ORIGINS` set to the Vercel site only.
+  `configs/api.render.yaml` is the profile sized for it: 100 races per simulation, a coarse
+  optimiser (~16 s on one full core, so a few minutes there), one optimisation at a time and
+  per-client quotas of 30 simulations and 4 optimisations an hour. Measured locally the API
+  holds ~450 MB and peaks at ~520 MB during an optimisation.
+- Deploys: every push to `main` redeploys. First time: Render dashboard → New → Blueprint →
+  this repository.
 
-```bash
-fly deploy --ha=false
-```
+`fly.toml` and `configs/api.deploy.yaml` are the earlier Fly.io setup (one 2 vCPU / 1 GB
+machine, full-size optimiser), kept for a paid host: `fly deploy --ha=false`.
 
 ## Tests
 

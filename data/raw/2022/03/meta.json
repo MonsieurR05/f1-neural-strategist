@@ -1,0 +1,13 @@
+{
+  "total_laps": 58,
+  "laps_completed": 58,
+  "year": 2022,
+  "round": 3,
+  "event_name": "Australian Grand Prix",
+  "location": "Melbourne",
+  "country": "Australia",
+  "event_date": "2022-04-10",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:16:44+00:00"
+}

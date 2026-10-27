@@ -42,7 +42,9 @@ class AppState:
         self.params = SimParams.load(model_dir / f"sim_params_{tag}.json")
         # Tyre-age limits come from the seasons the served models were fitted on (the tag).
         first, last = (int(y) for y in str(tag).split("-"))
-        self.train_laps = self.laps[self.laps["year"].between(first, last)]
+        in_tag = self.laps["year"].between(first, last)
+        # no copy when the tag covers every season (it does for the served models): ~95 MB
+        self.train_laps = self.laps if in_tag.all() else self.laps[in_tag]
         self._setup = lru_cache(maxsize=64)(self._build_setup)
 
     def simulatable(self, race_id: str) -> bool:

@@ -1,0 +1,16 @@
+{
+  "total_laps": 62,
+  "laps_completed": 63,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9165,
+  "openf1_meeting_key": 1219,
+  "year": 2023,
+  "round": 15,
+  "event_name": "Singapore Grand Prix",
+  "location": "Marina Bay",
+  "country": "Singapore",
+  "event_date": "2023-09-17",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:03+00:00"
+}

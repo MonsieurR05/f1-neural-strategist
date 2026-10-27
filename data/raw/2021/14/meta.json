@@ -1,0 +1,13 @@
+{
+  "total_laps": 53,
+  "laps_completed": 53,
+  "year": 2021,
+  "round": 14,
+  "event_name": "Italian Grand Prix",
+  "location": "Monza",
+  "country": "Italy",
+  "event_date": "2021-09-12",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T17:13:09+00:00"
+}

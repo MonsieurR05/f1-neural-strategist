@@ -1,0 +1,16 @@
+{
+  "total_laps": 50,
+  "laps_completed": 51,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9189,
+  "openf1_meeting_key": 1225,
+  "year": 2023,
+  "round": 21,
+  "event_name": "Las Vegas Grand Prix",
+  "location": "Las Vegas",
+  "country": "United States",
+  "event_date": "2023-11-18",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:04+00:00"
+}

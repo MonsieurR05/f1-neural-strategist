@@ -1,0 +1,16 @@
+{
+  "total_laps": 57,
+  "laps_completed": 58,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9693,
+  "openf1_meeting_key": 1254,
+  "year": 2025,
+  "round": 1,
+  "event_name": "Australian Grand Prix",
+  "location": "Melbourne",
+  "country": "Australia",
+  "event_date": "2025-03-16",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:05+00:00"
+}

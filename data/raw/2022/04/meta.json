@@ -1,0 +1,13 @@
+{
+  "total_laps": 63,
+  "laps_completed": 63,
+  "year": 2022,
+  "round": 4,
+  "event_name": "Emilia Romagna Grand Prix",
+  "location": "Imola",
+  "country": "Italy",
+  "event_date": "2022-04-24",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:16:53+00:00"
+}

@@ -1,0 +1,16 @@
+{
+  "total_laps": 71,
+  "laps_completed": 72,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9118,
+  "openf1_meeting_key": 1213,
+  "year": 2023,
+  "round": 9,
+  "event_name": "Austrian Grand Prix",
+  "location": "Spielberg",
+  "country": "Austria",
+  "event_date": "2023-07-02",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:03+00:00"
+}

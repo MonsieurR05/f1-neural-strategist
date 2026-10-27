@@ -1,5 +1,5 @@
 # Link apps/web to a Vercel project and point it at the deployed API (production env).
-# Usage, from apps/web:  & .\scripts\vercel-setup.ps1 -ApiUrl https://f1-neural-strategist-api.fly.dev
+# Usage, from apps/web:  & .\scripts\vercel-setup.ps1 -ApiUrl https://f1-neural-strategist-api.onrender.com
 param(
     [Parameter(Mandatory = $true)][string]$ApiUrl,
     [string]$Project = "f1-neural-strategist"

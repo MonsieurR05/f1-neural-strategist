@@ -1,0 +1,16 @@
+{
+  "total_laps": 56,
+  "laps_completed": 56,
+  "quali_source": "jolpica",
+  "openf1_session_key": 9998,
+  "openf1_meeting_key": 1255,
+  "year": 2025,
+  "round": 2,
+  "event_name": "Chinese Grand Prix",
+  "location": "Shanghai",
+  "country": "China",
+  "event_date": "2025-03-23",
+  "source": "openf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:25:05+00:00"
+}

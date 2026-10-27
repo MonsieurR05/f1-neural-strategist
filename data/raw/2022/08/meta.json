@@ -1,0 +1,13 @@
+{
+  "total_laps": 51,
+  "laps_completed": 51,
+  "year": 2022,
+  "round": 8,
+  "event_name": "Azerbaijan Grand Prix",
+  "location": "Baku",
+  "country": "Azerbaijan",
+  "event_date": "2022-06-12",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:17:30+00:00"
+}

@@ -1,0 +1,13 @@
+{
+  "total_laps": 58,
+  "laps_completed": 58,
+  "year": 2021,
+  "round": 22,
+  "event_name": "Abu Dhabi Grand Prix",
+  "location": "Yas Island",
+  "country": "Abu Dhabi",
+  "event_date": "2021-12-12",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:16:27+00:00"
+}

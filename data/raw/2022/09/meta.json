@@ -1,0 +1,13 @@
+{
+  "total_laps": 70,
+  "laps_completed": 70,
+  "year": 2022,
+  "round": 9,
+  "event_name": "Canadian Grand Prix",
+  "location": "Montr\u00e9al",
+  "country": "Canada",
+  "event_date": "2022-06-19",
+  "source": "fastf1",
+  "fastf1_version": "3.9.0",
+  "ingested_at": "2026-10-25T18:17:42+00:00"
+}
