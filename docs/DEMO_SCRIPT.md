@@ -1,12 +1,11 @@
 # Demo script
 
-About 90 seconds, screen recording with voiceover. Every step below was run on the live app
-on 2026-11-01. Simulated numbers can change after a redeploy, so read them off the screen.
+About 90 seconds, screen recording with voiceover. The simulate and optimiser steps were run on
+the live app on 2026-11-01. Simulated numbers can change after a redeploy, so read them off the
+screen.
 
 ## Before recording
 
-- Redeploy the frontend first. The live site still says "300 races each" and "usually under a
-  minute"; the repo has already dropped the first of these.
 - Open https://f1-neural-strategist.vercel.app about a minute early. The API sleeps when idle
   and takes about a minute to wake.
 - Use a desktop window and start on `/race/2025_04` (Bahrain 2025), with PIA as focus and RUS as

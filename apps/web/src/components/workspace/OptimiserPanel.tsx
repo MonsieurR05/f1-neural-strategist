@@ -65,7 +65,7 @@ export function OptimiserPanel({ race, driver, onLoad }: {
         </label>
       </div>
       <Button onClick={run} disabled={busy}>
-        {busy ? `Optimising… ${elapsed.toFixed(0)} s (usually under a minute)` : "Find the best strategy"}
+        {busy ? `Optimising… ${elapsed.toFixed(0)} s (up to a couple of minutes)` : "Find the best strategy"}
       </Button>
       {error && <ErrorNote message={error} />}
 
