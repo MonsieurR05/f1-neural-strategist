@@ -15,8 +15,9 @@ about a minute, and simulations there are smaller and slower than running it loc
 > behind a FastAPI service ([API](services/api/README.md)), and the Next.js web app
 > ([web](apps/web/README.md)). The sealed 2025 test season has been used for the final
 > evaluation (results below). Since then: in-race adaptation, which updates the forecast
-> from the laps already run (2025 validation below). Next: feed it into the simulator for an
-> in-race "pit wall" mode, then test everything on the 2026 season once it ends.
+> from the laps already run, and a simulator backtest across 18 circuits (2025 validation,
+> both below). The update improved lap forecasts but did not clearly improve race predictions,
+> so a "pit wall" mode was not built. Next: test everything on the 2026 season once it ends.
 > See [docs/DESIGN.md](docs/DESIGN.md) for the full design.
 
 **Final test: lap-time forecasting on the sealed 2025 season** (19,959 laps, 20 dry races;
@@ -84,6 +85,26 @@ accurate over the next five laps. What they don't do: predict the rest of a stin
 rate any better than lap_net. They correct the pace level, not stint-specific
 degradation. Updating also still hurts in a few races (Monaco 2025's two-stop tactics,
 Baku, Singapore).
+
+**Simulator across circuits (2025 validation, 18 dry races):** each race is replayed from
+25%, 50% and 75% of race distance, 500 runs each, with the strategies and safety cars that
+actually happened ([report](docs/reports/race_backtest_val.md)). Finishing-position error,
+averaged over the three points:
+
+| Model | Position MAE | Rank correlation |
+|---|---|---|
+| Simulator + in-race GP | **1.35** | 0.91 |
+| Simulator | 1.42 | 0.90 |
+| Order frozen at the cutoff | 1.71 | 0.87 |
+| That order plus remaining pit stops | 1.73 | 0.84 |
+
+The plain simulator beats both orders from mid-race (race-bootstrap intervals exclude zero),
+so it does generalise beyond Bahrain. From lap 1 it is about level with the frozen order
+(1.94 vs 1.99). The in-race update failed the test set before this was run: its gain over the
+plain simulator (−0.07 places, 95% interval −0.18 to +0.04) can't be told from noise, and the
+simulated chance of the actual winner fell from 0.77 to 0.64. A likely reason, not yet
+measured, is that much of the update corrects the pace of the whole field, which moves times
+more than order. Either way, a pit-wall mode built on this update isn't justified yet.
 
 The live app serves lap_net and simulator parameters refitted on all five seasons
 (2021–2025, `python -m strategist.sim.fit`) with the same settings. Every race in the app is
@@ -157,6 +178,14 @@ a few minutes on a CPU):
 
 ```bash
 python -m strategist.eval.inrace --config configs/inrace.yaml
+```
+
+Backtest the simulator on every eligible race of the validation season, with and without the
+in-race update (needs the in-race GP from the step above; writes
+`docs/reports/race_backtest_val.md`; about 8 minutes on a CPU):
+
+```bash
+python -m strategist.eval.race_backtest --config configs/race_backtest.yaml
 ```
 
 The split is now train 2021–2024 / validate 2025 / test 2026, so `strategist.eval.run` and

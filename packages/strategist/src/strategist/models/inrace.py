@@ -61,6 +61,7 @@ ROW_COLUMNS = ["race_id", "driver", "stint", "lap_number", "tyre_life", "compoun
 AGE_SCALE = 10.0  # tyre age in units of 10 laps inside the GP
 LAP_SCALE = 50.0  # race trend per 50 laps
 SIGMA_FLOOR = 0.05  # percent, as lap_net
+SAMPLE_JITTER = 1e-6  # keeps posterior covariances numerically positive definite
 
 
 def green_flag_laps(laps: pd.DataFrame) -> pd.DataFrame:
@@ -227,6 +228,31 @@ class InRaceGP:
             v = torch.linalg.solve_triangular(L, Kot, upper=False)
             var = (prior_var - (v**2).sum(0)).clamp_min(SIGMA_FLOOR**2)
         return mu.numpy(), var.sqrt().numpy()
+
+    def sample(self, obs: pd.DataFrame, target: pd.DataFrame, n: int,
+               rng: np.random.Generator) -> np.ndarray:
+        """``n`` joint posterior samples [n, len(target)] of the residual on ``target`` laps
+        without lap noise, so a run keeps its pace error from lap to lap (the simulator adds
+        the noise, ``params["noise"]``). ``obs`` may be empty."""
+        both = pd.concat([obs[ROW_COLUMNS], target[ROW_COLUMNS]], ignore_index=True)
+        x = _race_tensors(both)
+        m = len(obs)
+        xo = {k: v[:m] for k, v in x.items()}
+        xt = {k: v[m:] for k, v in x.items()}
+        with torch.no_grad():
+            mu = self._mean(xt)
+            cov = self._cov(xt, xt)
+            if m:
+                r = torch.as_tensor(obs["resid"].to_numpy(), dtype=torch.float64)
+                L = torch.linalg.cholesky(self._cov(xo, xo) + self._noise() * torch.eye(m, dtype=torch.float64))
+                Kot = self._cov(xo, xt)
+                mu = mu + Kot.T @ torch.cholesky_solve((r - self._mean(xo))[:, None], L)[:, 0]
+                v = torch.linalg.solve_triangular(L, Kot, upper=False)
+                cov = cov - v.T @ v
+            jitter = SAMPLE_JITTER * torch.eye(len(mu), dtype=torch.float64)
+            chol = torch.linalg.cholesky(cov + jitter)
+            z = torch.as_tensor(rng.standard_normal((n, len(mu))), dtype=torch.float64)
+        return (mu + z @ chol.T).numpy()
 
     def state(self) -> dict:
         return self.params

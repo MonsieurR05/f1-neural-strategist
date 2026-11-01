@@ -1,0 +1,10 @@
+# Multi-race simulator backtest (python -m strategist.eval.race_backtest). Splits from data_config.
+data_config: configs/data.yaml
+eval_config: configs/eval.yaml     # lap_net settings
+model_dir: artifacts/models        # lap_net, simulator parameters and the in-race GP
+runs: 500
+seed: 0
+# Replay points: lap 1, then these shares of race distance (with and without the in-race update).
+cutoffs: [0.25, 0.5, 0.75]
+report_dir: docs/reports
+report_name: race_backtest

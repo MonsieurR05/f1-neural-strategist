@@ -24,6 +24,10 @@ strategies for one driver at once: runs are laid out as ``variant × runs``, and
 reuses the same random draws for run m (common random numbers), so differences between
 variants come from the strategy, not from luck. The optimiser relies on this.
 
+**In-race update.** ``RaceSetup.pace_paths`` (samples of lap_net's error on the laps still to
+come, from ``InRaceGP.sample``) replaces the pre-race spread in step 2: each run follows one
+path, plus lap noise.
+
 Simulated outputs are counterfactual estimates (see the provenance rule in DESIGN.md).
 """
 
@@ -109,6 +113,10 @@ class RaceSetup:
     retirements: dict[str, int] | None = None     # driver → last completed lap
     # Pirelli hardness of the nominated compounds (data.compounds); typical values if None
     hardness: dict[str, float] | None = None
+    # In-race update: lap_net's error per [run, car, lap] in percent of q_s (lap 0 unused), and
+    # the lap noise around it. ``None`` → lap_net's pre-race spread.
+    pace_paths: np.ndarray | None = None
+    pace_noise_pct: float = 0.0
 
     def driver_index(self, driver: str) -> int:
         return [c.driver for c in self.cars].index(driver)
@@ -254,6 +262,12 @@ class Simulator:
         offset_z = shared(np.sqrt(common) * rng.standard_normal((M, 1))
                           + np.sqrt(driver) * rng.standard_normal((M, C)))
 
+        paths = None
+        if setup.pace_paths is not None:
+            if setup.pace_paths.shape != (M, C, L + 1):
+                raise ValueError(f"pace_paths must be {(M, C, L + 1)}, got {setup.pace_paths.shape}")
+            paths = shared(setup.pace_paths)
+
         if setup.events is not None:
             status = np.full((R, L + 1), "GREEN", dtype=object)
             for lap, kind in setup.events.items():
@@ -318,7 +332,11 @@ class Simulator:
             mu = (1.0 + mu_pct.numpy().reshape(R, C) / 100.0) * q
             sigma = sig_pct.numpy().reshape(R, C) / 100.0 * q
             noise = shared(rng.standard_normal((M, C)))
-            lap_time = mu + sigma * (offset_z + np.sqrt(lap_share) * noise)
+            if paths is None:
+                lap_time = mu + sigma * (offset_z + np.sqrt(lap_share) * noise)
+            else:
+                mu = mu + paths[:, :, lap] / 100.0 * q
+                lap_time = mu + setup.pace_noise_pct / 100.0 * q * noise
 
             kind = status[:, lap]
             sc = (kind == "SC") | (kind == "RED")

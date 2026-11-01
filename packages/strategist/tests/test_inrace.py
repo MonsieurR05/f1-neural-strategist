@@ -109,3 +109,30 @@ def test_gru_uses_observed_laps():
     mu, _ = gru.predict(obs, target)
     by_driver = pd.Series(mu, index=target.index).groupby(target["driver"]).mean()
     assert by_driver["D0"] > by_driver["D1"] + 2.0
+
+
+def test_gp_samples_match_the_posterior():
+    race = synthetic_race(offsets=[2.0, -1.0, 0.5, 0.0, 1.0, -0.5, 0.3, -2.0])
+    obs, target = split(race, 15)
+    gp = matched_gp(noise=0.3)
+    mu, sigma = gp.predict(obs, target)
+    draws = gp.sample(obs, target, 4000, np.random.default_rng(0))
+    assert draws.shape == (4000, len(target))
+    assert np.abs(draws.mean(0) - mu).max() < 0.1
+    total = np.sqrt(draws.var(0) + gp.params["noise"] ** 2)
+    assert np.abs(total - sigma).max() < 0.1
+    # a run's pace error persists: neighbouring laps of a stint move together across runs
+    first, next_lap = np.flatnonzero(target["driver"].to_numpy() == "D3")[:2]
+    assert np.corrcoef(draws[:, first], draws[:, next_lap])[0, 1] > 0.5
+
+
+def test_pit_adjusted_order_charges_only_stops_still_to_come():
+    from strategist.eval.race_backtest import pit_adjusted_order
+    from strategist.sim.race import Car, RaceSetup, Stint, Strategy
+
+    one_stop = Strategy([Stint("SOFT", 30), Stint("HARD", 60)])
+    done = Strategy([Stint("SOFT", 10), Stint("HARD", 60)])
+    cars = [Car("LEADS", 90.0, 0.0, 0.0, 1.0, one_stop), Car("STOPPED", 90.0, 0.0, 0.0, 2.0, done)]
+    setup = RaceSetup("X", 60, 30.0, cars, start_lap=20, start_times=np.array([0.0, 15.0]))
+    assert pit_adjusted_order(setup, 22.0) == ["STOPPED", "LEADS"]
+    assert pit_adjusted_order(setup, 10.0) == ["LEADS", "STOPPED"]

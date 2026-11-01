@@ -181,3 +181,21 @@ def test_finish_table_columns():
     t = res.finish_table()
     assert list(t["driver"]) == ["A", "B"] and t["p_win"].iat[0] == 1.0
     assert isinstance(t, pd.DataFrame)
+
+
+def test_pace_paths_shift_a_car_and_are_optional():
+    s = setup([car("A", 0.0), car("B", 0.0)], [0.0, 30.0], laps=11)
+    plain = Simulator(StubNet(), params(), runs=5, interactions=False).run(s)
+    paths = np.zeros((5, 2, 12))
+    paths[:, 1, 2:] = 1.0  # B is 1% slower than lap_net says, on the 10 laps run: 9 s
+    moved = Simulator(StubNet(), params(), runs=5, interactions=False).run(
+        setup([car("A", 0.0), car("B", 0.0)], [0.0, 30.0], laps=11, pace_paths=paths))
+    added = moved.times[-1][:, 1] - plain.times[-1][:, 1]
+    assert np.allclose(added, 0.01 * Q * 10, atol=0.01)
+    assert np.allclose(moved.times[-1][:, 0], plain.times[-1][:, 0])
+
+
+def test_pace_paths_must_match_the_race():
+    s = setup([car("A", 0.0)], [0.0], laps=11, pace_paths=np.zeros((5, 1, 3)))
+    with pytest.raises(ValueError, match="pace_paths"):
+        Simulator(StubNet(), params(), runs=5).run(s)
