@@ -9,6 +9,9 @@ simulator that evaluates pit strategies and explains why one beats another.
 Render's free tier, which sleeps when idle, so the first request after a quiet spell takes
 about a minute, and simulations there are smaller and slower than running it locally.
 
+**Read the story:** the [case study](docs/CASE_STUDY.md) covers the method, the held-out
+results and the experiment that failed.
+
 > Status: phases 0–5 are complete and deployed: data pipeline, exploration, an evaluation
 > harness with three non-neural baselines, the structured probabilistic lap-time network
 > ([model card](docs/MODEL_CARD.md)), the Monte Carlo race simulator, the strategy optimiser
