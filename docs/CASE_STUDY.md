@@ -4,8 +4,8 @@ A race-strategy simulator built on a neural lap-time model trained on real timin
 replays Grands Prix, tests pit strategies that were never raced, and explains why one beats
 another. Its results were checked on seasons it never saw, including the experiment that failed.
 
-[Open the live app](https://f1-neural-strategist.vercel.app) ·
-[2025 Bahrain GP](https://f1-neural-strategist.vercel.app/race/2025_04)
+[Open the live app](https://f1-neural-strategist-tau.vercel.app) ·
+[2025 Bahrain GP](https://f1-neural-strategist-tau.vercel.app/race/2025_04)
 
 Last updated 1 November 2026.
 
@@ -149,15 +149,19 @@ worse than no update.
 
 **The hosting changed underneath.** The API moved from Fly.io to Render's free tier when a trial
 ended. That forced a smaller profile of 512 MB and 100 simulated races per request, plus a slow
-wake from sleep.
+wake from sleep. Profiling then showed about 90% of the simulation time was the lap-time network,
+so the network and simulator were ported to Rust and compiled to WebAssembly. The strategy
+builder now runs 300 races in the visitor's browser, with no quota or wait for the server. Parity
+tests replay Python runs' random draws in Rust and require the same lap times.
 
 ## The product
 
 The app is a dark pit-wall interface with a race replay on a 2D circuit map, a gap chart, a
 drag-to-edit strategy builder and an optimiser that shows odds, time against the race as run,
-and a cost breakdown. The front end is Next.js and TypeScript on Vercel. The API is FastAPI in
-Docker with rate limits and a provenance label on every response. The models are PyTorch, with
-LightGBM as a baseline, and GitHub Actions runs both test suites on every push.
+and a cost breakdown. The front end is Next.js and TypeScript on Vercel, with the simulator in
+Rust compiled to WebAssembly. The API is FastAPI in Docker with rate limits and a provenance label
+on every response. The models are PyTorch, with LightGBM as a baseline, and GitHub Actions runs
+the Python and Rust test suites on every push.
 
 Bahrain is the calibrated circuit in the app. The live models were refitted on all five seasons,
 so every race in the app is in-sample; held-out accuracy comes from the tests above.

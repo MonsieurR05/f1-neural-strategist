@@ -6,13 +6,13 @@ screen.
 
 ## Before recording
 
-- Open https://f1-neural-strategist.vercel.app about a minute early. The API sleeps when idle
-  and takes about a minute to wake.
+- Open https://f1-neural-strategist-tau.vercel.app about a minute early. The API sleeps when
+  idle and takes about a minute to wake.
 - Use a desktop window and start on `/race/2025_04` (Bahrain 2025), with PIA as focus and RUS as
   compare.
-- Plan to cut the waits. Simulate takes about 25 s and the optimiser about 2 minutes on the free
-  tier. The API allows 30 simulations and 4 optimiser runs per hour, and Simulate uses two
-  simulations per click, so rehearse sparingly.
+- Simulate now runs in the browser (300 races; the first click also downloads the model, about
+  1.5 MB, so click it once before recording). The optimiser still runs on the API: about 2
+  minutes on the free tier and 4 runs per hour, so cut that wait and rehearse it sparingly.
 
 ## Script
 
