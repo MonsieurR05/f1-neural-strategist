@@ -40,9 +40,23 @@ production. To set it up or point it at a different API, then deploy (from `apps
 vercel deploy --prod --yes
 ```
 
+## Browser simulator
+
+The Strategy Builder simulates in the browser: the Rust simulator (`crates/strategist-sim`)
+compiled to WebAssembly runs in `public/sim/worker.js` and needs no API call. If it can't load,
+`src/lib/simulate.ts` falls back to the API. The files in `public/sim` are committed, because
+Vercel's build has no Rust; regenerate them after retraining or a simulator change (from the
+repository root):
+
+```bash
+python -m strategist.sim.export --web apps/web/public/sim
+node crates/strategist-sim/scripts/build_web.mjs
+```
+
 ## Structure
 
 - `src/lib/api.ts`: typed API client (mirrors `services/api/app/schemas.py`)
+- `src/lib/simulate.ts`: simulate in the browser, or via the API
 - `src/lib/race.ts`: tyre colours, strategy editing, replay interpolation
 - `src/components/workspace/`: track map, gap chart, strategy timeline, builder, optimiser
 - Charts are hand-written SVG with `d3-scale`/`d3-shape`. Colours are CSS roles in

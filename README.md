@@ -142,7 +142,8 @@ presented as fact.
 |---|---|
 | `packages/strategist/` | Python core: data pipeline, models, simulator, optimiser, evaluation |
 | `services/api/` | FastAPI service |
-| `apps/web/` | Next.js frontend |
+| `apps/web/` | Next.js frontend; `public/sim/` holds the browser simulator's files |
+| `crates/strategist-sim/` | Rust port of lap_net and the simulator (WebAssembly in the browser), held to the Python one by parity tests |
 | `configs/` | Experiment and data configs |
 | `notebooks/` | Exploration only |
 | `docs/` | Design, model card, evaluation reports |

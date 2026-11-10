@@ -2,6 +2,10 @@
 simulator (``crates/strategist-sim``), and write the fixtures its parity tests replay.
 
     python -m strategist.sim.export --config configs/api.yaml
+    python -m strategist.sim.export --web apps/web/public/sim   # what the browser loads
+
+``--web`` writes the model, the parameters and the replay setup (after lap 1) of every race
+the app can simulate, for the WebAssembly build the web app runs.
 
 This simulator stays the reference: every published number comes from it. The Rust port must
 reproduce it, so each fixture holds a setup, the random numbers the Python run drew, and what
@@ -230,11 +234,27 @@ def fixture_cases(net: LapTimeNet, params: SimParams, laps: pd.DataFrame, races:
     return cases
 
 
+def web_bundle(net: LapTimeNet, params: SimParams, laps: pd.DataFrame, races: pd.DataFrame,
+               raw_root: Path, out: Path) -> int:
+    """Model, parameters and one replay setup per simulatable race (dry, representative
+    qualifying), as the browser simulator needs them. Returns the number of races."""
+    (out / "races").mkdir(parents=True, exist_ok=True)
+    write = lambda path, obj: path.write_text(json.dumps(obj, separators=(",", ":")),  # noqa: E731
+                                              encoding="utf-8")
+    write(out / "model.json", model_dict(net))
+    write(out / "params.json", asdict(params))
+    simulatable = races[~races["wet"] & races["quali_representative"]].index
+    for race_id in simulatable:
+        write(out / "races" / f"{race_id}.json", setup_dict(history_setup(laps, raw_root, races, race_id, 1)))
+    return len(simulatable)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--config", default="configs/api.yaml",
                         help="API profile naming the data config, model directory and model tag")
     parser.add_argument("--out", default="crates/strategist-sim/tests/fixtures")
+    parser.add_argument("--web", help="write the browser bundle to this directory instead")
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
@@ -247,6 +267,11 @@ def main(argv: list[str] | None = None) -> int:
     torch.set_num_threads(1)
     net = LapTimeNet.load(model_dir / f"lap_net_{tag}.pt")
     params = SimParams.load(model_dir / f"sim_params_{tag}.json")
+
+    if args.web:
+        n = web_bundle(net, params, laps, races, raw_root, Path(args.web))
+        log.info("browser bundle for model %s: %d races in %s", tag, n, args.web)
+        return 0
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)

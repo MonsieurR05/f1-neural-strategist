@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { api, ApiError, type EventsMode, type FinishRow, type RaceDetail, type SimulateResponse, type Stint } from "@/lib/api";
+import { ApiError, type EventsMode, type FinishRow, type RaceDetail, type SimulateResponse, type Stint } from "@/lib/api";
+import { simulate } from "@/lib/simulate";
 import { useElapsed } from "@/lib/hooks";
 import { addStop, describe, fmtDelta, pct, sameStrategy, validate } from "@/lib/race";
 import { Button, ErrorNote, ProvenanceBadge } from "@/components/ui";
@@ -13,8 +14,6 @@ export interface SimPair {
   baseline: SimulateResponse;
   edited: SimulateResponse;
 }
-
-const RUNS = 300; // requested; the API caps it at its profile's max_runs (100 on Render)
 
 export function StrategyBuilder({ race, driver, draft, onDraft, result, onResult }: {
   race: RaceDetail;
@@ -37,11 +36,12 @@ export function StrategyBuilder({ race, driver, draft, onDraft, result, onResult
     setBusy(true);
     setError(null);
     try {
-      const common = { race_id: race.race.race_id, runs: RUNS, seed: 0, events };
-      // same seed for both: identical random draws, so the difference is the strategy
+      const common = { race_id: race.race.race_id, seed: 0, events };
+      // same seed for both: identical random draws, so the difference is the strategy. In the
+      // browser the as-raced run is cached, so only an edited strategy costs a simulation
       const [baseline, edited] = await Promise.all([
-        api.simulate(common),
-        api.simulate(unchanged ? common : { ...common, strategies: { [driver]: draft } }),
+        simulate(common),
+        simulate(unchanged ? common : { ...common, strategies: { [driver]: draft } }),
       ]);
       onResult({ driver, stints: draft, baseline, edited });
     } catch (e) {

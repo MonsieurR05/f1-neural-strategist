@@ -50,3 +50,10 @@ jobs:
       - name: Test Rust simulator against Python
         working-directory: crates/strategist-sim
         run: cargo test --release
+
+      # The browser simulator's model, parameters and race setups are committed (Vercel has no
+      # Rust); fail if they no longer match what the current code and models export
+      - name: Check the web app's simulator files are current
+        run: |
+          python -m strategist.sim.export --web "$RUNNER_TEMP/sim"
+          diff -r --exclude=worker.js --exclude=strategist_sim.wasm "$RUNNER_TEMP/sim" apps/web/public/sim
