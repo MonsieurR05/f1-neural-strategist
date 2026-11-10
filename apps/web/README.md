@@ -31,12 +31,11 @@ npm run build
 
 ## Deployment (Vercel)
 
-Live at https://f1-neural-strategist-tau.vercel.app. The Vercel project
-(`monsieurr05/f1-neural-strategist`; it is not connected to GitHub, so deploy with the CLI) has
-`API_URL` and `NEXT_PUBLIC_API_URL` set to the Render API for production. The API only accepts
-browser requests from the origins in `F1S_CORS_ORIGINS` (`render.yaml`), so a new address must
-be added there. An older deployment at https://f1-neural-strategist.vercel.app, in another
-account, still runs the pre-WebAssembly version. To set it up or point it at a different API, then deploy (from `apps/web`):
+Live at https://f1-neural-strategist.vercel.app. The Vercel project (`f1-neural-strategist` in
+the "rahul's projects" team) is not connected to GitHub, so pushing does not deploy it: deploy
+with the CLI. It has `API_URL` and `NEXT_PUBLIC_API_URL` set to the Render API for production.
+The API only accepts browser requests from the origins in `F1S_CORS_ORIGINS` (`render.yaml`), so
+a new address must be added there. To set it up or point it at a different API, then deploy (from `apps/web`):
 
 ```powershell
 & .\scripts\vercel-setup.ps1 -ApiUrl https://f1-neural-strategist-api.onrender.com

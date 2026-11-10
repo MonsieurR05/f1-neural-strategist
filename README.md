@@ -4,8 +4,8 @@ An interactive Formula 1 race-strategy simulator and decision-support tool. A
 neural lap-time model, trained on real timing data, drives a Monte Carlo race
 simulator that evaluates pit strategies and explains why one beats another.
 
-**Live:** https://f1-neural-strategist-tau.vercel.app (try the
-[2024 Bahrain GP](https://f1-neural-strategist-tau.vercel.app/race/2024_01)). The strategy
+**Live:** https://f1-neural-strategist.vercel.app (try the
+[2024 Bahrain GP](https://f1-neural-strategist.vercel.app/race/2024_01)). The strategy
 builder simulates in your browser (the simulator in Rust, compiled to WebAssembly). Race data
 and the optimiser come from an API on Render's free tier, which sleeps when idle, so the first
 page after a quiet spell takes about a minute and optimisations are slower than running locally.

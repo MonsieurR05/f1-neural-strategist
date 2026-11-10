@@ -6,7 +6,7 @@ screen.
 
 ## Before recording
 
-- Open https://f1-neural-strategist-tau.vercel.app about a minute early. The API sleeps when
+- Open https://f1-neural-strategist.vercel.app about a minute early. The API sleeps when
   idle and takes about a minute to wake.
 - Use a desktop window and start on `/race/2025_04` (Bahrain 2025), with PIA as focus and RUS as
   compare.

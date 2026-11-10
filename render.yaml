@@ -15,10 +15,9 @@ services:
     envVars:
       - key: F1S_API_CONFIG
         value: configs/api.render.yaml
-      # the only browser origins allowed to call the API: the Vercel frontend (monsieurr05
-      # project) and the original deployment, which keeps running until it is deleted
+      # the only browser origin allowed to call the API (the Vercel frontend)
       - key: F1S_CORS_ORIGINS
-        value: https://f1-neural-strategist-tau.vercel.app,https://f1-neural-strategist.vercel.app
+        value: https://f1-neural-strategist.vercel.app
       - key: F1S_THREADS
         value: "1"
       # glibc otherwise reserves a malloc arena per thread; memory is the tight resource here

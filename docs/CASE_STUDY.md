@@ -4,8 +4,8 @@ A race-strategy simulator built on a neural lap-time model trained on real timin
 replays Grands Prix, tests pit strategies that were never raced, and explains why one beats
 another. Its results were checked on seasons it never saw, including the experiment that failed.
 
-[Open the live app](https://f1-neural-strategist-tau.vercel.app) ·
-[2025 Bahrain GP](https://f1-neural-strategist-tau.vercel.app/race/2025_04)
+[Open the live app](https://f1-neural-strategist.vercel.app) ·
+[2025 Bahrain GP](https://f1-neural-strategist.vercel.app/race/2025_04)
 
 Last updated 1 November 2026.
 
