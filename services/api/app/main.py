@@ -174,19 +174,8 @@ def create_app(config: str | None = None) -> FastAPI:
             setup.events, setup.retirements = None, None
         res = Simulator(st().net, st().params, runs=runs, seed=req.seed).run(setup)
         finish = res.finish_table()
-        laps: dict[str, LapBands] = {}
-        lap_range = range(setup.start_lap, setup.total_laps + 1)
-        pos = np.stack([res.positions(lap) for lap in lap_range])  # [laps, runs, cars]
-        t = res.times[setup.start_lap:]
-        lead = np.where(np.isfinite(t), t, np.inf).min(axis=2, keepdims=True)
-        gap = np.where(np.isfinite(t), t - lead, np.nan)
-        for i, d in enumerate(res.drivers):
-            g = gap[:, :, i]
-            med = [np.nanmedian(row) if np.isfinite(row).any() else np.nan for row in g]
-            laps[d] = LapBands(median_pos=finite_or_none(np.median(pos[:, :, i], 1)),
-                               p10_pos=finite_or_none(np.quantile(pos[:, :, i], 0.1, axis=1)),
-                               p90_pos=finite_or_none(np.quantile(pos[:, :, i], 0.9, axis=1)),
-                               median_gap_s=finite_or_none(med))
+        laps = {d: LapBands(**{k: finite_or_none(v) for k, v in bands.items()})
+                for d, bands in res.lap_bands().items()}
         notes = []
         if req.events == "actual" and req.strategies:
             notes.append("Real SC/VSC laps are kept even though changed strategies might have changed them.")

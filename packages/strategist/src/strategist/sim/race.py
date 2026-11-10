@@ -151,6 +151,26 @@ class SimResult:
         """Reshape a per-run array [runs, ...] to [variants, runs_per_variant, ...]."""
         return values.reshape(self.variants, self.runs_per_variant, *values.shape[1:])
 
+    def lap_bands(self) -> dict[str, dict[str, np.ndarray]]:
+        """Per driver and lap from ``start_lap`` to the finish, across runs: median, 10% and 90%
+        position and the median gap to the leader (NaN where the car is out in every run)."""
+        laps = range(self.start_lap, self.times.shape[0])
+        pos = np.stack([self.positions(lap) for lap in laps])  # [laps, runs, cars]
+        t = self.times[self.start_lap:]
+        lead = np.where(np.isfinite(t), t, np.inf).min(axis=2, keepdims=True)
+        gap = np.where(np.isfinite(t), t - lead, np.nan)
+        bands = {}
+        for i, d in enumerate(self.drivers):
+            g = gap[:, :, i]
+            bands[d] = {
+                "median_pos": np.median(pos[:, :, i], 1),
+                "p10_pos": np.quantile(pos[:, :, i], 0.1, axis=1),
+                "p90_pos": np.quantile(pos[:, :, i], 0.9, axis=1),
+                "median_gap_s": np.array([np.nanmedian(row) if np.isfinite(row).any() else np.nan
+                                          for row in g]),
+            }
+        return bands
+
     def finish_table(self) -> pd.DataFrame:
         pos = self.positions()
         final = self.times[-1]

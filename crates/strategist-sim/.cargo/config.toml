@@ -1,0 +1,4 @@
+# The network's inner loops are written to vectorise; in WebAssembly that needs the SIMD
+# extension (Chrome 91+, Firefox 89+, Safari 16.4+).
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "target-feature=+simd128"]

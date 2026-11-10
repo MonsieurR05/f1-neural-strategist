@@ -41,3 +41,12 @@ jobs:
       - name: Test API
         working-directory: services/api
         run: python -m pytest
+
+      # The Rust simulator must reproduce the Python one: write fresh fixtures (inputs, the
+      # random draws of a Python run and its outputs), then replay them in Rust
+      - name: Export parity fixtures
+        run: python -m strategist.sim.export
+
+      - name: Test Rust simulator against Python
+        working-directory: crates/strategist-sim
+        run: cargo test --release
